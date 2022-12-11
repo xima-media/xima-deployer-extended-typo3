@@ -1,0 +1,17 @@
+{
+  "name": "xima/xima-deployer-extended-typo3",
+  "description": "Common deployer configuration for TYPO3 projects",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Maik Schneider",
+      "email": "maik.schneider@xima.de",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "sourcebroker/deployer-extended-typo3": "19.0.0",
+    "spooner/deployer-information": "1.3.0"
+  }
+}
