@@ -22,7 +22,7 @@ task('db:init', function () {
     foreach (get('db_databases_merged') as $databaseCode => $databaseConfig) {
         $tables = [...$databaseUtility->getTables($databaseConfig)];
     }
-    if (!empty($tables)) {
+    if (empty($tables)) {
         $activePath = get('deploy_path') . '/' . (test('[ -L {{deploy_path}}/release ]') ? 'release' : 'current');
         run('cd ' . $activePath . ' && {{bin/php}} {{bin/deployer}} db:init ' . $baseOption . $verbosity);
         invoke('typo3cms:database:updateschema');
