@@ -19,21 +19,21 @@ task('db:init', function () {
         run('cd ' . $activePath . ' && {{bin/php}} {{bin/deployer}} db:init ' . $baseOption . $verbosity);
     }
 
-    // empty database: schema update
+    // empty database: import from base branch
     $tables = [];
     $databaseUtility = new DatabaseUtility();
     foreach (get('db_databases_merged') as $databaseCode => $databaseConfig) {
         $tables = [...$databaseUtility->getTables($databaseConfig)];
     }
-    if (empty($tables)) {
+    if (empty($tables) && $baseBranch) {
+
+        $basePath = str_replace(get('branch'), $baseBranch, get('deploy_path'));
+        $activeBasePath = $basePath . '/' . (test('[ -L ' . $basePath . '/release ]') ? 'release' : 'current');
+        $exportCommand = 'cd ' . $activeBasePath . ' && {{bin/php}} {{bin/typo3cms}} database:export';
+
         $activePath = get('deploy_path') . '/' . (test('[ -L {{deploy_path}}/release ]') ? 'release' : 'current');
-        run('cd ' . $activePath . ' && {{bin/php}} {{bin/deployer}} db:init ' . $baseOption . $verbosity);
-        invoke('typo3cms:database:updateschema');
+        $importCommand = '{{bin/php}} ' . $activePath . '/vendor/bin/typo3cms database:import';
+
+        runLocally($exportCommand . ' | ' . $importCommand);
     }
-
-    // no data: import from base branch
-    if ($baseBranch) {
-    }
-
-
 });
