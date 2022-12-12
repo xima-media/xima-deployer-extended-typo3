@@ -2,7 +2,7 @@
 
 namespace Deployer;
 
-// apache user
+// webserver user
 set('http_user', 'www-data');
 
 // remote permissions
@@ -15,9 +15,6 @@ host('local')->hostname('local')->set('deploy_path', '/var/www/html');
 
 // read typo3 database connection from bin/typo3cms > AdditionalConfiguration.php > .env
 set('driver_typo3cms', true);
-
-// register new variable for feature-branch deployment
-set('base_branch', '');
 
 // set writable dirs
 set('writable_dirs', function () {
@@ -47,10 +44,3 @@ set('shared_dirs', function () {
         'var/goaccess',
     ];
 });
-
-// disable branch check because it fails in pipeline
-task('deploy:check_branch_local', function () {
-});
-
-// prevent pipeline fail on first deploy (no tables)
-before('db:truncate', 'db:init');

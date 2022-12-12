@@ -5,6 +5,9 @@ namespace Deployer;
 use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
 use SourceBroker\DeployerExtendedDatabase\Utility\DatabaseUtility;
 
+/**
+ * Check for missing database: Run database updateschema + import database of base branch
+ */
 task('db:init', function () {
 
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
@@ -29,6 +32,8 @@ task('db:init', function () {
     }
 
     // no data: import from base branch
+    if ($baseBranch) {
+    }
 
 
 });
