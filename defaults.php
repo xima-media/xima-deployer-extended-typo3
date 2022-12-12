@@ -53,4 +53,4 @@ task('deploy:check_branch_local', function () {
 });
 
 // prevent pipeline fail on first deploy (no tables)
-before('db:truncate', 'typo3cms:database:updateschema');
+before('db:truncate', 'db:init');

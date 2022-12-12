@@ -10,4 +10,5 @@ new \SourceBroker\DeployerExtendedTypo3\Loader();
 require_once(__DIR__ . '/defaults.php');
 
 // install recipes
+require_once(__DIR__ . '/recipe/db_init.php');
 require_once(__DIR__ . '/recipe/db_truncate.php');
