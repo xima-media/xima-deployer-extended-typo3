@@ -9,10 +9,6 @@ use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
  */
 task('db:init', function () {
 
-    if (empty(get('argument_stage'))) {
-        return;
-    }
-
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
 
     // abort if feature branch has already been configured
@@ -29,4 +25,4 @@ task('db:init', function () {
 
     // copy database from base branch
     runLocally('{{local/bin/deployer}} db:copy ' . $baseStage . ' --options=target:' . $targetStage);
-})->once();
+});
