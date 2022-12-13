@@ -16,7 +16,7 @@ task('db:init', function () {
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
 
     // abort if feature branch has already been configured
-    if (test('[ -f {{deploy_path}}/.dep/releases.extended ]') || !$baseBranch || !get('argument_stage')) {
+    if (!$baseBranch || !get('argument_stage') || test('[ -f {{deploy_path}}/.dep/releases.extended ]')) {
         return;
     }
 
@@ -29,4 +29,4 @@ task('db:init', function () {
 
     // copy database from base branch
     runLocally('{{local/bin/deployer}} db:copy ' . $baseStage . ' --options=target:' . $targetStage);
-});
+})->once();
