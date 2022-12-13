@@ -8,7 +8,6 @@ use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
  * Check for missing database: Run database updateschema + import database of base branch
  */
 task('db:init', function () {
-
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
 
     // abort if feature branch has already been configured
