@@ -11,7 +11,7 @@ task('db:init', function () {
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
 
     // abort if feature branch has already been configured
-    if (!$baseBranch || !get('argument_stage') || test('[ -f {{deploy_path}}/.dep/releases.extended ]')) {
+    if (!$baseBranch || !get('argument_stage') || test('[ -f {{deploy_path}}/.dep/latest_release ]')) {
         return;
     }
 
