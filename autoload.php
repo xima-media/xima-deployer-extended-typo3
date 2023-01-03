@@ -16,4 +16,5 @@ require_once(__DIR__ . '/recipe/db_truncate.php');
 require_once(__DIR__ . '/recipe/deploy_check_branch_local.php');
 
 // prevent pipeline fail on first deploy (no tables)
+// + enable database copy in feature branch deployment
 before('db:truncate', 'db:init');
