@@ -11,7 +11,7 @@
     }
   ],
   "require": {
-    "sourcebroker/deployer-extended-typo3": "19.0.0",
+    "sourcebroker/deployer-extended-typo3": "20.0.0",
     "spooner/deployer-information": "1.3.0"
   }
 }
