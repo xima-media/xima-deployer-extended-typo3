@@ -10,6 +10,9 @@ use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
 task('db:init', function () {
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
 
+    runLocally('echo pwd');
+    runLocally('echo ls -la');
+
     // abort if feature branch has already been configured
     if (!$baseBranch || !get('argument_stage') || test('[ -f {{deploy_path}}/.dep/latest_release ]')) {
         return;
