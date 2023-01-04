@@ -10,30 +10,18 @@ use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
 task('db:init', function () {
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
 
-    if (test('[ -f {{deploy_path}}/.dep/latest_release ]')) {
-        runLocally('echo "1"');
-    }
-
-    if (!get('argument_stage')) {
-        runLocally('echo "2"');
-    }
-
-    if (!$baseBranch) {
-        runLocally('echo "3"');
-    }
-
     // abort if feature branch has already been configured
-    if (!$baseBranch || !get('argument_stage') || test('[ -f {{deploy_path}}/.dep/latest_release ]')) {
+    if (!$baseBranch || !get('argument_host') || test('[ -f {{deploy_path}}/.dep/latest_release ]')) {
         return;
     }
 
-    $targetStage = get('argument_stage');
-    $baseStage = str_replace(strtolower(get('branch')), $baseBranch, $targetStage);
+    $targetHost = get('argument_host');
+    $baseStage = str_replace(strtolower(get('branch')), $baseBranch, $targetHost);
     $activePath = get('deploy_path') . '/' . (test('[ -L {{deploy_path}}/release ]') ? 'release' : 'current');
 
     // update schema (db:import would fail with empty database)
     run('cd ' . $activePath . ' && {{bin/php}} {{bin/typo3cms}} database:updateschema');
 
     // copy database from base branch
-    runLocally('{{local/bin/deployer}} db:copy ' . $baseStage . ' --options=target:' . $targetStage);
+    runLocally('{{local/bin/deployer}} db:copy ' . $baseStage . ' --options=target:' . $targetHost);
 });
