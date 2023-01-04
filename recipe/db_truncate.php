@@ -9,7 +9,7 @@ use SourceBroker\DeployerExtendedDatabase\Utility\DatabaseUtility;
 task('db:truncate', function () {
     $arrayUtility = new ArrayUtility();
     $databaseUtility = new DatabaseUtility();
-    if (empty(get('argument_stage'))) {
+    if (empty(get('argument_host'))) {
         // abort if database connection fails (in case of activated driver_cms and empty database)
         try {
             $databaseConfigs = get('db_databases_merged');

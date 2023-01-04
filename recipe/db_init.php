@@ -3,6 +3,7 @@
 namespace Deployer;
 
 use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
+use SourceBroker\DeployerExtendedDatabase\Utility\DatabaseUtility;
 
 /**
  * Check for missing database: Run database updateschema + import database of base branch
@@ -11,8 +12,14 @@ task('db:init', function () {
     $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
 
     // abort if feature branch has already been configured
-    // test('[ -f {{deploy_path}}/.dep/latest_release ]')
     if (!$baseBranch || !get('argument_host')) {
+        return;
+    }
+
+    // abort if feature branch database has already been imported
+    $databases = get('db_databases_merged');
+    $tables = (new DatabaseUtility())->getTables($databases['database_default']);
+    if (count($tables) !== 0) {
         return;
     }
 
