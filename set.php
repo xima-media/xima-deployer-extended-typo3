@@ -44,3 +44,6 @@ set('shared_dirs', function () {
         'var/goaccess',
     ];
 });
+
+// set log files dir
+set('log_files', 'var/log/*.log');
