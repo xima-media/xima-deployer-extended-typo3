@@ -3,7 +3,6 @@
 namespace Deployer;
 
 use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
-use SourceBroker\DeployerExtendedDatabase\Utility\DatabaseUtility;
 
 /**
  * Check for missing database: Run database updateschema + import database of base branch
@@ -16,16 +15,16 @@ task('db:init', function () {
         return;
     }
 
-    // abort if feature branch database has already been imported
-    $databases = get('db_databases_merged');
-    $tables = (new DatabaseUtility())->getTables($databases['database_default']);
-    if (count($tables) !== 0) {
+    $activePath = get('deploy_path') . '/' . (test('[ -L {{deploy_path}}/release ]') ? 'release' : 'current');
+    $hasPageTable = (boolean)run('cd ' . $activePath . ' && echo "SHOW TABLES LIKE \'pages\';" | {{bin/php}} {{bin/typo3cms}} database:import');
+
+    // no database import if pages table exists
+    if ($hasPageTable) {
         return;
     }
 
     $targetHost = get('argument_host');
     $baseStage = str_replace(strtolower(get('branch')), $baseBranch, $targetHost);
-    $activePath = get('deploy_path') . '/' . (test('[ -L {{deploy_path}}/release ]') ? 'release' : 'current');
 
     // update schema (db:import would fail with empty database)
     run('cd ' . $activePath . ' && {{bin/php}} {{bin/typo3cms}} database:updateschema');
