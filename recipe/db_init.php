@@ -24,7 +24,7 @@ task('db:init', function () {
     }
 
     $targetHost = get('argument_host');
-    $baseStage = str_replace(strtolower(get('branch')), $baseBranch, $targetHost);
+    $baseStage = str_replace(strtolower(get('branch')), strtolower($baseBranch), $targetHost);
 
     // update schema (db:import would fail with empty database)
     run('cd ' . $activePath . ' && {{bin/php}} {{bin/typo3cms}} database:updateschema');
