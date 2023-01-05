@@ -29,6 +29,11 @@ task('db:init', function () {
     // update schema (db:import would fail with empty database)
     run('cd ' . $activePath . ' && {{bin/php}} {{bin/typo3cms}} database:updateschema');
 
+    // abort in case base is target
+    if ($baseStage === $targetHost) {
+        return;
+    }
+
     // copy database from base branch
     runLocally('{{local/bin/deployer}} db:copy ' . $baseStage . ' --options=target:' . $targetHost);
 });
