@@ -10,3 +10,39 @@ This package extends [deployer-extended-typo3](https://github.com/sourcebroker/d
 
 * dep log:app
 * dep log:php
+
+## Install
+
+### deploy.php
+
+```php
+<?php
+
+namespace Deployer;
+
+require_once(__DIR__ . '/vendor/xima/xima-deployer-extended-typo3/autoload.php');
+
+
+set('repository', 'git@github.com:your-repo-name.git');
+
+function defineTestHost($branchName, $stage)
+{
+    host('example-' . strtolower($branchName))
+        ->setHostname('192.168.0.1')
+        ->setRemoteUser('username')
+        ->set('labels', ['stage' => $stage])
+        ->set('branch', $branchName)
+        ->set('public_urls', ['https://' . strtolower($branchName) . '.example.com'])
+        ->set('deploy_path', '/var/www/html/example_' . strtolower($branchName));
+}
+
+// main host
+defineTestHost('master', 'live');
+
+// feature branch hosts
+for ($i = 0; $i <= 999; $i++) {
+    $ticketNr = str_pad($i, 3, '0', STR_PAD_LEFT);
+    $branchName = 'TICKET-' . $ticketNr;
+    defineTestHost($branchName, 'feature');
+}
+```
