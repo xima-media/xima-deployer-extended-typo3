@@ -47,6 +47,3 @@ set('shared_dirs', function () {
 
 // set log files dir
 set('log_files', 'var/log/*.log');
-
-// disable database override feature
-set('db_databases_merged', get('db_databases'));

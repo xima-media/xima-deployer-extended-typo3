@@ -5,7 +5,6 @@ This package extends [deployer-extended-typo3](https://github.com/sourcebroker/d
 ## Highlights
 
 * **Feature-Branch Deployment** with new `base_branch` option
-* Disable database override feature by setting ```db_databases_merged``` to ```db_databases```
 
 ## New useful commands
 
