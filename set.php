@@ -53,3 +53,6 @@ set('fetch_method', 'curl');
 
 // keep permissions from source system
 set('media_rsync_flags', '-rz --perms');
+
+// disable composer version check
+set('composer_channel_autoupdate', false);
