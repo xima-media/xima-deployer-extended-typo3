@@ -50,3 +50,6 @@ set('log_files', 'var/log/*.log');
 
 // use curl instead of wget
 set('fetch_method', 'curl');
+
+// keep permissions from source system
+set('media_rsync_flags', '-rz --perms');
