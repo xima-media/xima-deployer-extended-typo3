@@ -47,3 +47,6 @@ set('shared_dirs', function () {
 
 // set log files dir
 set('log_files', 'var/log/*.log');
+
+// use curl instead of wget
+set('fetch_method', 'curl');
