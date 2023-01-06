@@ -11,7 +11,7 @@ set('writable_chmod_recursive', false);
 set('writable_chmod_mode', '2770');
 
 // local host is always needed
-host('local')->set('deploy_path', '/var/www/html');
+host('local')->set('deploy_path', getcwd());
 
 // read typo3 database connection from bin/typo3cms > AdditionalConfiguration.php > .env
 set('driver_typo3cms', true);
