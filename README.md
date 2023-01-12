@@ -1,17 +1,19 @@
 # Deployer configuration for TYPO3 projects
 
-This package extends [deployer-extended-typo3](https://github.com/sourcebroker/deployer-extended-typo3) for some common configurations
+This package extends [deployer-extended-typo3](https://github.com/sourcebroker/deployer-extended-typo3) for some common configurations.
 
 ## Highlights
 
+* **Default values** for typical server environment
 * **Feature-Branch Deployment** with new `base_branch` option
 
-## New useful commands
+## Installation
 
-* dep log:app
-* dep log:php
+```
+composer require xima/xima-deployer-extended-typo3
+```
 
-## Install
+## Configuration
 
 ### deploy.php
 
@@ -56,3 +58,12 @@ vendor/bin/dep deploy-fast example-ticket-001 --options=base_branch:master
 ```
 
 If this option is set, the command checks if the current feature host has been initialized before. In case of an empty database, the `db:copy` command is triggert to fetch a database copy from the given **base_branch**.
+
+## Default values
+
+Configuration covers typical permission, shared and writtable directory settings. See [set.php](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/set.php) for default values.
+
+## New useful commands
+
+* dep log:app
+* dep log:php
