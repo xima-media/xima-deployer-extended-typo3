@@ -46,3 +46,13 @@ for ($i = 0; $i <= 999; $i++) {
     defineTestHost($branchName, 'feature');
 }
 ```
+
+## Feature-Branch deployment
+
+There is a new command ```db:init``` which runs right before ```db:truncate```. This command checks for the *base_branch* option:
+
+```
+vendor/bin/dep deploy-fast example-ticket-001 --options=base_branch:master
+```
+
+If this option is set, the command checks if the current feature host has been initialized before. In case of an empty database, the `db:copy` command is triggert to fetch a database copy from the given **base_branch**.
