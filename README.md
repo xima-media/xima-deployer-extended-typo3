@@ -44,10 +44,10 @@ for ($i = 1; $i <= 999; $i++) {
     $branchName = 'TICKET-' . $ticketNr;
     defineTestHost($branchName, 'feature');
 }
-```
 
 // main host
 defineTestHost('master', 'live');
+```
 
 ## Feature-Branch deployment
 
