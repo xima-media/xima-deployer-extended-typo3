@@ -11,7 +11,9 @@ set('writable_chmod_recursive', false);
 set('writable_chmod_mode', '2770');
 
 // local host is always needed
-host('local')->set('deploy_path', getcwd());
+host('local')
+    ->set('deploy_path', getcwd())
+    ->set('rsync_src', __DIR__);
 
 // read typo3 database connection from bin/typo3cms > AdditionalConfiguration.php > .env
 set('driver_typo3cms', true);
@@ -56,3 +58,25 @@ set('media_rsync_flags', '-rz --perms');
 
 // disable composer version check
 set('composer_channel_autoupdate', false);
+
+// configure default rsync settings
+set('rsync', [
+    'exclude' => [],
+    'exclude-file' => false,
+    'include' => [
+        'config',
+        'packages',
+        'public/.htaccess',
+        'public/typo3conf/LocalConfiguration.php',
+        'public/typo3conf/AdditionalConfiguration.php',
+        'vendor'
+    ],
+    'include-file' => false,
+    'filter' => [],
+    'filter-file' => false,
+    'filter-perdir' => false,
+    'flags' => 'rz',
+    'options' => ['delete'],
+    'timeout' => 300,
+]);
+set('rsync_dest', '{{release_path}}');

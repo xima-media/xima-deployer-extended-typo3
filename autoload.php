@@ -2,6 +2,9 @@
 
 namespace Deployer;
 
+// install rsync package
+require 'contrib/rsync.php';
+
 // install deployer-extended-typo3
 $vendorRoot = is_dir(__DIR__ . '/../../../vendor') ? __DIR__ . '/../../..' : __DIR__ . '/../..';
 require_once($vendorRoot . '/vendor/sourcebroker/deployer-loader/autoload.php');
