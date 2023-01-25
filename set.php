@@ -62,14 +62,14 @@ set('rsync', [
     'exclude' => [],
     'exclude-file' => false,
     'include' => [
-        'composer.json',
-        'composer.lock',
-        'config',
-        'packages',
-        'public/.htaccess',
-        'public/typo3conf/LocalConfiguration.php',
-        'public/typo3conf/AdditionalConfiguration.php',
-        'vendor'
+        './composer.json',
+        './composer.lock',
+        './config',
+        './packages',
+        './public/.htaccess',
+        './public/typo3conf/LocalConfiguration.php',
+        './public/typo3conf/AdditionalConfiguration.php',
+        './vendor'
     ],
     'include-file' => false,
     'filter' => [],
