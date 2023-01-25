@@ -62,6 +62,8 @@ set('rsync', [
     'exclude' => [],
     'exclude-file' => false,
     'include' => [
+        'composer.json',
+        'composer.lock',
         'config',
         'packages',
         'public/.htaccess',
