@@ -6,6 +6,7 @@ This package extends [deployer-extended-typo3](https://github.com/sourcebroker/d
 
 * **Default values** for typical server environment
 * **Feature-Branch Deployment** with new `base_branch` option
+* **Non-git** deployment
 
 ## Installation
 
@@ -67,3 +68,12 @@ Configuration covers typical permission, shared and writtable directory settings
 
 * dep log:app
 * dep log:php
+
+## Non-git deployment
+
+If the source host has no access to the git repository, you can replace `deploy:update_code` with the new `deploy:upload_code` task to transfer all needed files.
+
+```
+task('deploy:update_code')->disable();
+after('deploy:update_code', 'deploy:upload_code');
+```

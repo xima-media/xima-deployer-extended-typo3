@@ -56,35 +56,3 @@ set('media_rsync_flags', '-rz --perms');
 
 // disable composer version check
 set('composer_channel_autoupdate', false);
-
-// configure default rsync settings
-set('rsync', [
-    'exclude' => [],
-    'exclude-file' => false,
-    'include' => [
-        './composer.json',
-        './composer.lock',
-        './config',
-        './packages',
-        './public/.htaccess',
-        './public/typo3conf/LocalConfiguration.php',
-        './public/typo3conf/AdditionalConfiguration.php',
-    ],
-    'include-file' => false,
-    'filter' => [],
-    'filter-file' => false,
-    'filter-perdir' => false,
-    'flags' => 'rz',
-    'options' => [],
-    'timeout' => 150,
-]);
-
-// configure rsync paths
-set('rsync_src', __DIR__);
-set('rsync_dest', '{{release_path}}');
-
-// fix permissions after rsync task
-after('rsync', function () {
-    run('find {{release_path}} -type d -exec chmod {{writable_chmod_mode}} {} \;');
-    run('find {{release_path}} -type f -exec chmod 0640 {} \;');
-});
