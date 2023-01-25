@@ -69,17 +69,22 @@ set('rsync', [
         './public/.htaccess',
         './public/typo3conf/LocalConfiguration.php',
         './public/typo3conf/AdditionalConfiguration.php',
-        './vendor'
     ],
     'include-file' => false,
     'filter' => [],
     'filter-file' => false,
     'filter-perdir' => false,
     'flags' => 'rz',
-    'options' => ['delete'],
-    'timeout' => 300,
+    'options' => [],
+    'timeout' => 150,
 ]);
 
 // configure rsync paths
 set('rsync_src', __DIR__);
 set('rsync_dest', '{{release_path}}');
+
+// fix permissions after rsync task
+after('rsync', function () {
+    run('find {{release_path}} -type d -exec chmod {{writable_chmod_mode}} {} \;');
+    run('find {{release_path}} -type f -exec chmod 0640 {} \;');
+});
