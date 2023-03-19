@@ -63,6 +63,15 @@ If this option is set, the command checks if the current feature host has been i
 
 Configuration covers typical permission, shared and writtable directory settings. See [set.php](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/set.php) for default values.
 
+To extend a default values array, use the following `set` command:
+
+```php
+set('shared_dirs', [
+	...get('shared_dirs'),
+	'newDir',
+]);
+```
+
 ## New useful commands
 
 * dep log:app
@@ -76,3 +85,5 @@ If the source host has no access to the git repository, you can replace `deploy:
 task('deploy:update_code')->disable();
 after('deploy:update_code', 'deploy:upload_code');
 ```
+
+The files to upload become configured via [`upload_paths`](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/set.php#L61).

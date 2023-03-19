@@ -56,3 +56,15 @@ set('media_rsync_flags', '-rz --perms');
 
 // disable composer version check
 set('composer_channel_autoupdate', false);
+
+// files to upload in non-git deployment
+set('upload_paths', [
+    'composer.json',
+    'composer.lock',
+    'deploy.php',
+    'config',
+    'packages',
+    'public/.htaccess',
+    'public/typo3conf/LocalConfiguration.php',
+    'public/typo3conf/AdditionalConfiguration.php',
+]);
