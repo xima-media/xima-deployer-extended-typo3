@@ -41,8 +41,7 @@ function defineTestHost($branchName, $stage)
 
 // feature branch hosts
 for ($i = 1; $i <= 999; $i++) {
-    $ticketNr = str_pad($i, 3, '0', STR_PAD_LEFT);
-    $branchName = 'TICKET-' . $ticketNr;
+    $branchName = 'TICKET-' . $i;
     defineTestHost($branchName, 'feature');
 }
 
