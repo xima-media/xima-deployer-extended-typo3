@@ -15,6 +15,7 @@ require_once(__DIR__ . '/recipe/db_init.php');
 require_once(__DIR__ . '/recipe/deploy_check_branch_local.php');
 require_once(__DIR__ . '/recipe/deploy_upload_code.php');
 require_once(__DIR__ . '/recipe/logs_php.php');
+require_once(__DIR__ . '/recipe/check_requirements.php');
 
 // prevent pipeline fail on first deploy (no tables)
 // + enable database copy in feature branch deployment
