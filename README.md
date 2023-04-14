@@ -76,6 +76,7 @@ set('shared_dirs', [
 
 * dep log:app
 * dep log:php
+* dep sequelace
 
 ## Non-git deployment
 
