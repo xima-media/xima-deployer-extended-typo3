@@ -15,8 +15,7 @@ task('check:requirements', [
     'check:permissions',
     'check:env',
     'check:env_instance',
-    'check:env_baseUrl',
-    'check:env_releaseUrl',
+    'check:env_vars',
     'check:summary'
 ]);
 
@@ -120,36 +119,42 @@ task('check:env_instance', function() {
     ]);
 })->hidden();
 
-desc('Ensure TYPO3_BASE_URL is set');
-task('check:env_baseUrl', function () {
-    $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
-    if (test('[ -z ' . $baseUrl .' ]')) {
-        $status = 'Error';
-        $msg = 'TYPO3_BASE_URL is not set';
-    } else {
+desc('Ensure mandatory .env parameters are configured');
+task('check:env_vars', function() {
+    $vars = EnvUtility::getRemoteEnvVars();
+    $parameters = array(
+        'TYPO3_BASE_URL',
+        'TYPO3_RELEASE_URL',
+        'TYPO3_CONF_VARS__DB__Connections__Default__dbname',
+        'TYPO3_CONF_VARS__DB__Connections__Default__host',
+        'TYPO3_CONF_VARS__DB__Connections__Default__password',
+        'TYPO3_CONF_VARS__DB__Connections__Default__port',
+        'TYPO3_CONF_VARS__DB__Connections__Default__user'
+    );
+    $missing = array();
+    $empty = array();
+    
+    foreach ($parameters as $parameter) {
+        if (!array_key_exists($parameter, $vars)) {
+            $missing[] = $parameter;
+        } else {
+            if (test('[ -z ' . $vars[$parameter] .' ]')) {
+                $empty[] = $parameter;
+            }
+        }
+    }
+
+    if (empty($empty) && empty($missing)) {
         $status = 'Ok';
-        $msg = 'TYPO3_BASE_URL is set (' . $baseUrl . ')';
+        $msg = 'Mandatory parameters in .env are configured';
+    } else {
+        $status = 'Error';
+        $msg = 'Mandatory parameters in .env are missing (' . implode(', ', $missing) . ') or empty (' . implode(', ', $empty) . ')';
     }
 
     set('requirement_rows', [
         ...get('requirement_rows'),
-        ['check:env_baseUrl',$status, $msg],
+        ['check:env_vars',$status, $msg],
     ]);
-})->hidden();
 
-desc('Ensure TYPO3_RELEASE_URL is set');
-task('check:env_releaseUrl', function () {
-    $releaseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'];
-    if (test('[ -z ' . $releaseUrl .' ]')) {
-        $status = 'Error';
-        $msg = 'TYPO3_RELEASE_URL is not set';
-    } else {
-        $status = 'Ok';
-        $msg = 'TYPO3_RELEASE_URL is set (' . $releaseUrl . ')';
-    }
-
-    set('requirement_rows', [
-        ...get('requirement_rows'),
-        ['check:env_releaseUrl',$status, $msg],
-    ]);
 })->hidden();
