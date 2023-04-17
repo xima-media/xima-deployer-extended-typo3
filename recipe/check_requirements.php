@@ -299,7 +299,8 @@ task('check:php_extensions', function() {
         'zip',
         'zlib',
         'openssl',
-        'pdo_mysql'
+        'pdo_mysql',
+        'apcu'
     );
     $missingExtensions = array();
     $installedExtensions = run('php -m');
