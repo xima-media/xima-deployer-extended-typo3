@@ -10,7 +10,7 @@ set('requirement_rows', []);
 
 desc('Check if deployment requirements are fulfilled');
 task('check:requirements', [
-    'check:group',
+    'check:user',
     'check:permissions',
     'check:summary'
 ]);
@@ -23,21 +23,23 @@ task('check:summary', function () {
        ->render();
 })->hidden();
 
-desc('Ensure user has primary group www-data');
-task('check:group', function () {
+desc('Ensure SSH user matches remote_user and has primary group www-data');
+task('check:user', function () {
+    $remoteUser = get('remote_user');
+    $userName = run('id -un');
     $primaryUserGroup = run('id -gn');
 
-    if ($primaryUserGroup === 'www-data') {
+    if ($userName === $remoteUser && $primaryUserGroup === 'www-data') {
         $status = 'Ok';
-        $msg = 'User is member of ' . $primaryUserGroup;
+        $msg = 'SSH user matches remote_user ' . $remoteUser . ' and is member of ' . $primaryUserGroup;
     } else {
         $status = 'Error';
-        $msg = 'Primary group must be www-data (is ' . $primaryUserGroup . ')';
+        $msg = 'SSH user must be' . $remoteUser . '(is ' . $userName . ') and primary group must be www-data (is ' . $primaryUserGroup . ')';
     }
 
     set('requirement_rows', [
         ...get('requirement_rows'),
-        ['check:group',$status, $msg],
+        ['check:user',$status, $msg],
     ]);
 })->hidden();
 
