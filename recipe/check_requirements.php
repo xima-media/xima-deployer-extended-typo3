@@ -19,6 +19,7 @@ task('check:requirements', [
     'check:domains',
     'check:urls',
     'check:mysql',
+    'check:php_extensions',
     'check:summary'
 ]);
 
@@ -252,6 +253,51 @@ task('check:mysql', function() {
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:mysql',$status, $msg],
+    ]);
+
+})->hidden();
+
+desc('Ensure always mandatory php extensions are present');
+task('check:php_extensions', function() {
+    $requiredExtensions = array(
+        'pdo',
+        'json',
+        'pcre',
+        'session',
+        'xml',
+        'filter',
+        'SPL',
+        'standard',
+        'tokenizer',
+        'mbstring',
+        'intl',
+        'fileinfo',
+        'gd',
+        'zip',
+        'zlib',
+        'openssl',
+        'pdo_mysql'
+    );
+    $missingExtensions = array();
+
+    $installedExtensions = run('php -m');
+    foreach ($requiredExtensions as $requiredExtension) {
+        if (stripos($installedExtensions, $requiredExtension) === false) {
+            $missingExtensions[] = $requiredExtension;
+        }
+    }
+
+    if (empty($missingExtensions)) {
+        $status = 'Ok';
+        $msg = 'Always mandatory PHP extensions are present. Perform manual checks for special extensions like ldap and redis.';
+    } else {
+        $status = 'Error';
+        $msg = 'Mandatory extensions are missing: ' . implode(', ', $missingExtensions);
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:php_extensions',$status, $msg],
     ]);
 
 })->hidden();
