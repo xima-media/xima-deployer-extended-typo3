@@ -18,6 +18,7 @@ task('check:requirements', [
     'check:env_vars',
     'check:domains',
     'check:urls',
+    'check:mysql',
     'check:summary'
 ]);
 
@@ -201,7 +202,6 @@ task('check:urls', function() {
     foreach ($urls as $url) {
         $responseHeader = get_headers($url, true);
         $statusCode = $responseHeader[0];
-        var_dump($statusCode);
         if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
             $failedRequests[] = $url . ': ' . $statusCode;
         }
@@ -218,6 +218,40 @@ task('check:urls', function() {
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:urls',$status, $msg],
+    ]);
+
+})->hidden();
+
+desc('Ensure database can be accessed');
+task('check:mysql', function() {
+    $vars = EnvUtility::getRemoteEnvVars();
+    $dbname = $vars['TYPO3_CONF_VARS__DB__Connections__Default__dbname'];
+    $host = $vars['TYPO3_CONF_VARS__DB__Connections__Default__host'];
+    $port = $vars['TYPO3_CONF_VARS__DB__Connections__Default__port'];
+    $user = $vars['TYPO3_CONF_VARS__DB__Connections__Default__user'];
+    $password = $vars['TYPO3_CONF_VARS__DB__Connections__Default__password'];
+
+    if ($vars['TYPO3_CONF_VARS__DB__Connections__Default__user'] === '2048') {
+        // if ssl is needed
+        $result = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' --ssl ' . $dbname . ' > /dev/null 2>&1; echo $?');
+    } else {
+        $result = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' ' . $dbname . ' > /dev/null 2>&1; echo $?');
+    }
+
+    if ($result === '0') {
+        $status = 'Ok';
+        $msg = 'Database is accessible';
+    } elseif ($result === '1') {
+        $status = 'Error';
+        $msg = 'Could not connect to database';
+    } else {
+        $status = 'Error';
+        $msg = 'Unknown exit code: ' . $result;
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:mysql',$status, $msg],
     ]);
 
 })->hidden();
