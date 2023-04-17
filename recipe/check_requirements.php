@@ -11,6 +11,7 @@ set('requirement_rows', []);
 
 desc('Check if deployment requirements are fulfilled');
 task('check:requirements', [
+    'check:locales',
     'check:user',
     'check:permissions',
     'check:env_perms',
@@ -29,6 +30,34 @@ task('check:summary', function () {
        ->setHeaders(['Task', 'Status', 'Info'])
        ->setRows(get('requirement_rows'))
        ->render();
+})->hidden();
+
+desc('Ensure system locales are present');
+task('check:locales', function () {
+    $localesRequired = array('de_DE.utf8', 'en_US.utf8');
+    $localesPresent = run('locale -a');
+    $localesMissing = array();
+
+    foreach ($localesRequired as $locale) {
+        if (str_contains($localesPresent, $locale) === false) {
+            $localesMissing[] = $locale;
+        }
+    }
+
+    if (empty($localesMissing)) {
+        $status = 'Ok';
+        $msg = 'Required locales are installed: ' . implode(', ', $localesRequired);
+    } else {
+        $status = 'Error';
+        $msg = 'Required locales are missing: ' .implode(', ', $localesMissing);
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:locales',$status, $msg],
+    ]);
+
+    
 })->hidden();
 
 desc('Ensure SSH user matches remote_user and has primary group www-data');
