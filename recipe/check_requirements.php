@@ -5,6 +5,7 @@ namespace Deployer;
 use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
 use SourceBroker\DeployerExtendedTypo3\Utility\ConsoleUtility as ConsoleUtilityAlias;
 use Symfony\Component\Console\Helper\Table;
+use Xima\XimaDeployerExtendedTypo3\Utility\EnvUtility;
 
 set('requirement_rows', []);
 
@@ -13,6 +14,7 @@ task('check:requirements', [
     'check:user',
     'check:permissions',
     'check:env',
+    'check:instance',
     'check:summary'
 ]);
 
@@ -95,5 +97,23 @@ task('check:env', function() {
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:env',$status, $msg],
+    ]);
+})->hidden();
+
+desc('Ensure INSTANCE in .env matches deployer hostname');
+task('check:instance', function() {
+    $currentHostname = currentHost()->get('alias');
+    $instance = EnvUtility::getRemoteEnvVars()['INSTANCE'];
+    if ($currentHostname === $instance) {
+        $status = 'Ok';
+        $msg = 'hostname (' . $currentHostname . ') matches INSTANCE from .env (' . $instance . ')';
+    } else {
+        $status = 'Error';
+        $msg = 'hostname (' . $currentHostname . ') does not match INSTANCE from .env (' . $instance . ')';
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:instance',$status, $msg],
     ]);
 })->hidden();
