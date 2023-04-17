@@ -16,6 +16,7 @@ task('check:requirements', [
     'check:env_perms',
     'check:env_instance',
     'check:env_vars',
+    'check:domains',
     'check:summary'
 ]);
 
@@ -155,6 +156,35 @@ task('check:env_vars', function() {
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:env_vars',$status, $msg],
+    ]);
+
+})->hidden();
+
+desc('Ensure DNS records for TYPO3_BASE_URL and TYPO3_RELEASE_URL exist');
+task('check:domains', function() {
+    $baseDomain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'], PHP_URL_HOST);
+    $releaseDomain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'], PHP_URL_HOST);
+    // todo: parse aliases
+    $domains = array($baseDomain, $releaseDomain);
+    $recordsMissing = array();
+
+    foreach ($domains as $domain) {
+        if (checkdnsrr($domain, "A") === false) {
+            $recordsMissing[] = $domain;
+        }
+    }
+
+    if (empty($recordsMissing)) {
+        $status = 'Ok';
+        $msg = 'DNS A records do exist for ' . implode(', ', $domains);
+    } else {
+        $status = 'Error';
+        $msg = 'DNS A records are missing for ' . implode(', ', $recordsMissing);
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:domains',$status, $msg],
     ]);
 
 })->hidden();
