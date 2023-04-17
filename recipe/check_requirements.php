@@ -14,9 +14,9 @@ task('check:requirements', [
     'check:user',
     'check:permissions',
     'check:env',
-    'check:instance',
-    'check:baseUrl',
-    'check:releaseUrl',
+    'check:env_instance',
+    'check:env_baseUrl',
+    'check:env_releaseUrl',
     'check:summary'
 ]);
 
@@ -103,7 +103,7 @@ task('check:env', function() {
 })->hidden();
 
 desc('Ensure INSTANCE in .env matches deployer hostname');
-task('check:instance', function() {
+task('check:env_instance', function() {
     $currentHostname = currentHost()->get('alias');
     $instance = EnvUtility::getRemoteEnvVars()['INSTANCE'];
     if ($currentHostname === $instance) {
@@ -116,12 +116,12 @@ task('check:instance', function() {
 
     set('requirement_rows', [
         ...get('requirement_rows'),
-        ['check:instance',$status, $msg],
+        ['check:env_instance',$status, $msg],
     ]);
 })->hidden();
 
 desc('Ensure TYPO3_BASE_URL is set');
-task('check:baseUrl', function () {
+task('check:env_baseUrl', function () {
     $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
     if (test('[ -z ' . $baseUrl .' ]')) {
         $status = 'Error';
@@ -133,12 +133,12 @@ task('check:baseUrl', function () {
 
     set('requirement_rows', [
         ...get('requirement_rows'),
-        ['check:baseUrl',$status, $msg],
+        ['check:env_baseUrl',$status, $msg],
     ]);
 })->hidden();
 
 desc('Ensure TYPO3_RELEASE_URL is set');
-task('check:releaseUrl', function () {
+task('check:env_releaseUrl', function () {
     $releaseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'];
     if (test('[ -z ' . $releaseUrl .' ]')) {
         $status = 'Error';
@@ -150,6 +150,6 @@ task('check:releaseUrl', function () {
 
     set('requirement_rows', [
         ...get('requirement_rows'),
-        ['check:releaseUrl',$status, $msg],
+        ['check:env_releaseUrl',$status, $msg],
     ]);
 })->hidden();
