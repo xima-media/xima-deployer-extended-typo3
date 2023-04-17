@@ -17,6 +17,7 @@ task('check:requirements', [
     'check:env_instance',
     'check:env_vars',
     'check:domains',
+    'check:urls',
     'check:summary'
 ]);
 
@@ -160,7 +161,7 @@ task('check:env_vars', function() {
 
 })->hidden();
 
-desc('Ensure DNS records for TYPO3_BASE_URL and TYPO3_RELEASE_URL exist');
+desc('Ensure DNS records for TYPO3_BASE_URL and TYPO3_BASE_URL exist');
 task('check:domains', function() {
     $baseDomain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'], PHP_URL_HOST);
     $releaseDomain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'], PHP_URL_HOST);
@@ -185,6 +186,38 @@ task('check:domains', function() {
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:domains',$status, $msg],
+    ]);
+
+})->hidden();
+
+desc('Ensure TYPO3_BASE_URL and TYPO3_BASE_URL are reachable with HTTP code 200 or 404');
+task('check:urls', function() {
+    $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
+    $releaseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'];
+
+    $urls = array($baseUrl, $releaseUrl);
+    $failedRequests = array();
+
+    foreach ($urls as $url) {
+        $responseHeader = get_headers($url, true);
+        $statusCode = $responseHeader[0];
+        var_dump($statusCode);
+        if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
+            $failedRequests[] = $url . ': ' . $statusCode;
+        }
+    }
+
+    if (empty($failedRequests)) {
+        $status = 'Ok';
+        $msg = 'URLs returned valid HTTP response codes: ' . implode(', ', $urls);
+    } else {
+        $status = 'Error';
+        $msg = 'URLs returned invalid HTTP response codes: ' . implode(', ', $failedRequests);
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:urls',$status, $msg],
     ]);
 
 })->hidden();
