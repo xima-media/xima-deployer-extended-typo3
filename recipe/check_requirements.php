@@ -68,8 +68,7 @@ task('check:permissions', function () {
         ...get('requirement_rows'),
         ['check:permissions',$status, $msg],
     ]);
-
-});
+})->hidden();
 
 desc('Ensure .env exists with correct permissions');
 task('check:env', function() {
@@ -97,4 +96,4 @@ task('check:env', function() {
         ...get('requirement_rows'),
         ['check:env',$status, $msg],
     ]);
-});
+})->hidden();
