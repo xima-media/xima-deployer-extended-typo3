@@ -15,6 +15,8 @@ task('check:requirements', [
     'check:permissions',
     'check:env',
     'check:instance',
+    'check:baseUrl',
+    'check:releaseUrl',
     'check:summary'
 ]);
 
@@ -115,5 +117,39 @@ task('check:instance', function() {
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:instance',$status, $msg],
+    ]);
+})->hidden();
+
+desc('Ensure TYPO3_BASE_URL is set');
+task('check:baseUrl', function () {
+    $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
+    if (test('[ -z ' . $baseUrl .' ]')) {
+        $status = 'Error';
+        $msg = 'TYPO3_BASE_URL is not set';
+    } else {
+        $status = 'Ok';
+        $msg = 'TYPO3_BASE_URL is set (' . $baseUrl . ')';
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:baseUrl',$status, $msg],
+    ]);
+})->hidden();
+
+desc('Ensure TYPO3_RELEASE_URL is set');
+task('check:releaseUrl', function () {
+    $releaseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'];
+    if (test('[ -z ' . $releaseUrl .' ]')) {
+        $status = 'Error';
+        $msg = 'TYPO3_RELEASE_URL is not set';
+    } else {
+        $status = 'Ok';
+        $msg = 'TYPO3_RELEASE_URL is set (' . $releaseUrl . ')';
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:releaseUrl',$status, $msg],
     ]);
 })->hidden();
