@@ -56,8 +56,6 @@ task('check:locales', function () {
         ...get('requirement_rows'),
         ['check:locales',$status, $msg],
     ]);
-
-    
 })->hidden();
 
 desc('Ensure SSH user matches remote_user and has primary group www-data');
@@ -138,6 +136,7 @@ desc('Ensure INSTANCE in .env matches deployer hostname');
 task('check:env_instance', function() {
     $currentHostname = currentHost()->get('alias');
     $instance = EnvUtility::getRemoteEnvVars()['INSTANCE'];
+
     if ($currentHostname === $instance) {
         $status = 'Ok';
         $msg = 'hostname (' . $currentHostname . ') matches INSTANCE from .env (' . $instance . ')';
@@ -189,7 +188,6 @@ task('check:env_vars', function() {
         ...get('requirement_rows'),
         ['check:env_vars',$status, $msg],
     ]);
-
 })->hidden();
 
 desc('Ensure DNS records for TYPO3_BASE_URL and TYPO3_BASE_URL exist');
@@ -218,14 +216,12 @@ task('check:domains', function() {
         ...get('requirement_rows'),
         ['check:domains',$status, $msg],
     ]);
-
 })->hidden();
 
 desc('Ensure TYPO3_BASE_URL and TYPO3_BASE_URL are reachable with HTTP code 200 or 404');
 task('check:urls', function() {
     $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
     $releaseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'];
-
     $urls = array($baseUrl, $releaseUrl);
     $failedRequests = array();
 
@@ -249,7 +245,6 @@ task('check:urls', function() {
         ...get('requirement_rows'),
         ['check:urls',$status, $msg],
     ]);
-
 })->hidden();
 
 desc('Ensure database can be accessed');
@@ -283,7 +278,6 @@ task('check:mysql', function() {
         ...get('requirement_rows'),
         ['check:mysql',$status, $msg],
     ]);
-
 })->hidden();
 
 desc('Ensure always mandatory php extensions are present');
@@ -308,8 +302,8 @@ task('check:php_extensions', function() {
         'pdo_mysql'
     );
     $missingExtensions = array();
-
     $installedExtensions = run('php -m');
+
     foreach ($requiredExtensions as $requiredExtension) {
         if (stripos($installedExtensions, $requiredExtension) === false) {
             $missingExtensions[] = $requiredExtension;
@@ -328,5 +322,4 @@ task('check:php_extensions', function() {
         ...get('requirement_rows'),
         ['check:php_extensions',$status, $msg],
     ]);
-
 })->hidden();
