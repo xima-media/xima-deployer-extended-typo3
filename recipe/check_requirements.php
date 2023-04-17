@@ -13,7 +13,7 @@ desc('Check if deployment requirements are fulfilled');
 task('check:requirements', [
     'check:user',
     'check:permissions',
-    'check:env',
+    'check:env_perms',
     'check:env_instance',
     'check:env_vars',
     'check:summary'
@@ -74,7 +74,7 @@ task('check:permissions', function () {
 })->hidden();
 
 desc('Ensure .env exists with correct permissions');
-task('check:env', function() {
+task('check:env_perms', function() {
     if (test('[ -f {{deploy_path}}/shared/.env ]')) {
         $env = get('deploy_path') . '/shared/.env';
         $remoteUser = get('remote_user');
@@ -97,7 +97,7 @@ task('check:env', function() {
 
     set('requirement_rows', [
         ...get('requirement_rows'),
-        ['check:env',$status, $msg],
+        ['check:env_perms',$status, $msg],
     ]);
 })->hidden();
 
