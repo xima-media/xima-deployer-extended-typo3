@@ -12,6 +12,7 @@ desc('Check if deployment requirements are fulfilled');
 task('check:requirements', [
     'check:user',
     'check:permissions',
+    'check:env',
     'check:summary'
 ]);
 
@@ -46,17 +47,17 @@ task('check:user', function () {
 desc('Ensure application directory exists with correct permissions');
 task('check:permissions', function () {
     if (test('[ -d {{deploy_path}} ]')) {
-        $user = run('id -un');
+        $remoteUser = get('remote_user');
         $owner = run('stat -c "%U" ' . get('deploy_path'));
         $group = run('stat -c "%G" ' . get('deploy_path'));
         $mode  = run('stat -c "%a" ' . get('deploy_path'));
 
-        if ($mode === '2770' && $owner === $user && $group === 'www-data') {
+        if ($mode === '2770' && $owner === $remoteUser && $group === 'www-data') {
             $status = 'Ok';
             $msg = get('deploy_path') . ' is owned by user ' . $owner . ', group ' . $group . ', with permission ' . $mode;
         } else {
             $status = 'Error';
-            $msg = get('deploy_path') . ' must be owned by user ' . $user . ' (is ' . $owner . '), group www-data (is ' . $group . '), with permission 2770 (is ' . $mode . ')';
+            $msg = get('deploy_path') . ' must be owned by user ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with permission 2770 (is ' . $mode . ')';
         }
     } else {
         $status = 'Error';
@@ -68,4 +69,32 @@ task('check:permissions', function () {
         ['check:permissions',$status, $msg],
     ]);
 
+});
+
+desc('Ensure .env exists with correct permissions');
+task('check:env', function() {
+    if (test('[ -f {{deploy_path}}/shared/.env ]')) {
+        $env = get('deploy_path') . '/shared/.env';
+        $remoteUser = get('remote_user');
+        $owner = run('stat -c "%U" ' . $env);
+        $group = run('stat -c "%G" ' . $env);
+        $mode  = run('stat -c "%a" ' . $env);
+
+        if ($mode === '640' && $owner === $remoteUser && $group === 'www-data') {
+            $status = 'Ok';
+            $msg = $env . ' is owned by user ' . $owner . ', group ' . $group . ', with permission ' . $mode;
+        } else {
+            $status = 'Error';
+            $msg = $env . ' must be owned by user ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with permission 640 (is ' . $mode . ')';
+        }
+        
+    } else {
+        $status = 'Error';
+        $msg = 'Environment file {{deploy_path}}/shared/.env does not exist';
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:env',$status, $msg],
+    ]);
 });
