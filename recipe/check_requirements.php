@@ -192,8 +192,9 @@ task('check:env_vars', function() {
 
 desc('Ensure DNS records for TYPO3_BASE_URL and TYPO3_BASE_URL exist');
 task('check:domains', function() {
-    $baseDomain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'], PHP_URL_HOST);
-    $releaseDomain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'], PHP_URL_HOST);
+    $vars = EnvUtility::getRemoteEnvVars()
+    $baseDomain = parse_url($vars['TYPO3_BASE_URL'], PHP_URL_HOST);
+    $releaseDomain = parse_url($vars['TYPO3_RELEASE_URL'], PHP_URL_HOST);
     // todo: parse aliases
     $domains = array($baseDomain, $releaseDomain);
     $recordsMissing = array();
@@ -220,8 +221,9 @@ task('check:domains', function() {
 
 desc('Ensure TYPO3_BASE_URL and TYPO3_BASE_URL are reachable with HTTP code 200 or 404');
 task('check:urls', function() {
-    $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
-    $releaseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'];
+    $vars = EnvUtility::getRemoteEnvVars()
+    $baseUrl = $vars['TYPO3_BASE_URL'];
+    $releaseUrl = $vars['TYPO3_RELEASE_URL'];
     $urls = array($baseUrl, $releaseUrl);
     $failedRequests = array();
 
