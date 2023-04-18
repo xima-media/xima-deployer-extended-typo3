@@ -35,22 +35,22 @@ task('check:summary', function () {
 
 desc('Ensure system locales are present');
 task('check:locales', function () {
-    $localesRequired = array('de_DE.utf8', 'en_US.utf8');
-    $localesPresent = run('locale -a');
-    $localesMissing = array();
+    $required = array('de_DE.utf8', 'en_US.utf8');
+    $available = run('locale -a');
+    $missing = array();
 
-    foreach ($localesRequired as $locale) {
-        if (str_contains($localesPresent, $locale) === false) {
-            $localesMissing[] = $locale;
+    foreach ($required as $locale) {
+        if (str_contains($available, $locale) === false) {
+            $missing[] = $locale;
         }
     }
 
-    if (empty($localesMissing)) {
+    if (empty($missing)) {
         $status = 'Ok';
-        $msg = 'Required locales are installed: ' . implode(', ', $localesRequired);
+        $msg = 'Required locales are installed: ' . implode(', ', $required);
     } else {
         $status = 'Error';
-        $msg = 'Required locales are missing: ' .implode(', ', $localesMissing);
+        $msg = 'Required locales are missing: ' .implode(', ', $missing);
     }
 
     set('requirement_rows', [
@@ -198,20 +198,20 @@ task('check:domains', function() {
     $releaseDomain = parse_url($vars['TYPO3_RELEASE_URL'], PHP_URL_HOST);
     // todo: parse aliases
     $domains = array($baseDomain, $releaseDomain);
-    $recordsMissing = array();
+    $unresolved = array();
 
     foreach ($domains as $domain) {
         if (checkdnsrr($domain, "A") === false) {
-            $recordsMissing[] = $domain;
+            $unresolved[] = $domain;
         }
     }
 
-    if (empty($recordsMissing)) {
+    if (empty($unresolved)) {
         $status = 'Ok';
         $msg = 'DNS A records do exist for ' . implode(', ', $domains);
     } else {
         $status = 'Error';
-        $msg = 'DNS A records are missing for ' . implode(', ', $recordsMissing);
+        $msg = 'DNS A records were not found for ' . implode(', ', $unresolved);
     }
 
     set('requirement_rows', [
@@ -226,22 +226,22 @@ task('check:urls', function() {
     $baseUrl = $vars['TYPO3_BASE_URL'];
     $releaseUrl = $vars['TYPO3_RELEASE_URL'];
     $urls = array($baseUrl, $releaseUrl);
-    $failedRequests = array();
+    $failed = array();
 
     foreach ($urls as $url) {
         $responseHeader = get_headers($url, true);
         $statusCode = $responseHeader[0];
         if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
-            $failedRequests[] = $url . ': ' . $statusCode;
+            $failed[] = $url . ': ' . $statusCode;
         }
     }
 
-    if (empty($failedRequests)) {
+    if (empty($failed)) {
         $status = 'Ok';
         $msg = 'URLs returned valid HTTP response codes: ' . implode(', ', $urls);
     } else {
         $status = 'Error';
-        $msg = 'URLs returned invalid HTTP response codes: ' . implode(', ', $failedRequests);
+        $msg = 'URLs returned invalid HTTP response codes: ' . implode(', ', $failed);
     }
 
     set('requirement_rows', [
@@ -285,7 +285,7 @@ task('check:mysql', function() {
 
 desc('Ensure always mandatory php extensions are present');
 task('check:php_extensions', function() {
-    $requiredExtensions = array(
+    $required = array(
         'pdo',
         'json',
         'pcre',
@@ -305,21 +305,21 @@ task('check:php_extensions', function() {
         'pdo_mysql',
         'apcu'
     );
-    $missingExtensions = array();
-    $installedExtensions = run('php -m');
+    $available = run('php -m');
+    $missing = array();
 
-    foreach ($requiredExtensions as $requiredExtension) {
-        if (stripos($installedExtensions, $requiredExtension) === false) {
-            $missingExtensions[] = $requiredExtension;
+    foreach ($required as $extension) {
+        if (stripos($available, $extension) === false) {
+            $missing[] = $extension;
         }
     }
 
-    if (empty($missingExtensions)) {
+    if (empty($missing)) {
         $status = 'Ok';
         $msg = 'Mandatory PHP extensions are present, perform manual checks for additional extensions like ldap and redis';
     } else {
         $status = 'Error';
-        $msg = 'Mandatory extensions are missing: ' . implode(', ', $missingExtensions);
+        $msg = 'Mandatory extensions are missing: ' . implode(', ', $missing);
     }
 
     set('requirement_rows', [
@@ -331,8 +331,8 @@ task('check:php_extensions', function() {
 desc('Ensure mandatory php settings are set');
 task('check:php_settings', function() {
     $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
-    $documentRoot = get('deploy_path') . '/current/public/';
-    $infoFile = 'phpinfo_' . uniqid() . '.php';
+    $webRoot = get('deploy_path') . '/current/public/';
+    $phpFile = 'phpinfo_' . uniqid() . '.php';
     $configToJson = <<<'EOD'
 <?php
 \$data = array(
@@ -350,12 +350,12 @@ echo json_encode(\$data);
 exit();
 EOD;
     // output config as json via webserver
-    run('mkdir -p ' . $documentRoot);
-    run('echo "' . $configToJson . '" > ' . $documentRoot . $infoFile);
+    run('mkdir -p ' . $webRoot);
+    run('echo "' . $configToJson . '" > ' . $webRoot . $phpFile);
     //  and read json from webserver
-    $json = run('wget ' . $baseUrl . '/' . $infoFile . ' -q -O -');
+    $json = run('wget ' . $baseUrl . '/' . $phpFile . ' -q -O -');
     // clean up
-    run("rm " .$documentRoot . $infoFile);
+    run("rm " .$webRoot . $phpFile);
 
     $config =(json_decode($json, true));
     $errors = array();
