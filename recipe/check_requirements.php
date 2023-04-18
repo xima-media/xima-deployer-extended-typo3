@@ -21,6 +21,7 @@ task('check:requirements', [
     'check:urls',
     'check:mysql',
     'check:php_extensions',
+    'check:php_settings',
     'check:summary'
 ]);
 
@@ -315,7 +316,7 @@ task('check:php_extensions', function() {
 
     if (empty($missingExtensions)) {
         $status = 'Ok';
-        $msg = 'Always mandatory PHP extensions are present. Perform manual checks for special extensions like ldap and redis.';
+        $msg = 'Mandatory PHP extensions are present, perform manual checks for additional extensions like ldap and redis';
     } else {
         $status = 'Error';
         $msg = 'Mandatory extensions are missing: ' . implode(', ', $missingExtensions);
@@ -324,5 +325,85 @@ task('check:php_extensions', function() {
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:php_extensions',$status, $msg],
+    ]);
+})->hidden();
+
+desc('Ensure mandatory php settings are set');
+task('check:php_settings', function() {
+    $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
+    $documentRoot = get('deploy_path') . '/current/public/';
+    $infoFile = 'phpinfo_' . uniqid() . '.php';
+    $configToJson = <<<'EOD'
+<?php
+\$data = array(
+    'php_sapi_name' => php_sapi_name(),                        // must be "fpm-fcgi"
+    'default_timezone' => date_default_timezone_get(),         // must be Europe/Berlin
+    'memory_limit' => ini_get('memory_limit'),                 // must be 512M
+    'max_execution_time' => ini_get('max_execution_time'),     // must be 240+
+    'max_input_vars' => ini_get('max_input_vars'),             // must be 1500+
+    'post_max_size' => ini_get('post_max_size'),               // must be 21M+
+    'upload_max_filesize' => ini_get('upload_max_filesize'),   // must be 20M+
+    'opcache.enable' => ini_get('opcache.enable'),             // must be 1
+);
+header(\"Content-Type: application/json\");
+echo json_encode(\$data);
+exit();
+EOD;
+    // output config as json via webserver
+    run('mkdir -p ' . $documentRoot);
+    run('echo "' . $configToJson . '" > ' . $documentRoot . $infoFile);
+    //  and read json from webserver
+    $json = run('wget ' . $baseUrl . '/' . $infoFile . ' -q -O -');
+    // clean up
+    run("rm " .$documentRoot . $infoFile);
+
+    $config =(json_decode($json, true));
+    $errors = array();
+
+    function return_bytes ($size_str) {
+        switch (substr ($size_str, -1)) {
+            case 'M': case 'm': return (int)$size_str * 1048576;
+            case 'K': case 'k': return (int)$size_str * 1024;
+            case 'G': case 'g': return (int)$size_str * 1073741824;
+            default: return $size_str;
+        }
+    }
+
+    if ($config['php_sapi_name'] !== 'fpm-fcgi') {
+        $errors[] = 'PHP-FPM not enabled';
+    }
+    if ($config['default_timezone'] !== 'Europe/Berlin') {
+        $errors[] = 'default timezone is not Europe/Berlin';
+    }
+    if (intval(return_bytes($config['memory_limit'])) < 536870912) {
+        $errors[] = 'memory_limit is less than 512M';
+    }
+    if (intval($config['max_execution_time']) < 240 ) {
+        $errors[] = 'max_execution_time is lower than 240s';
+    }
+    if (intval($config['max_input_vars']) < 1500 ) {
+        $errors[] = 'max_input_vars is lower than 1500';
+    }
+    if (intval(return_bytes($config['post_max_size'])) < 22020096) {
+        $errors[] = 'post_max_size is less than 21M';
+    }
+    if (intval(return_bytes($config['upload_max_filesize'])) < 20971520) {
+        $errors[] = 'upload_max_filesize is less than 20M';
+    }
+    if ($config['opcache.enable'] !== '1' ) {
+        $errors[] = 'opcache is disabled';
+    }
+
+    if (empty($errors)) {
+        $status = 'Ok';
+        $msg = 'Mandatory PHP settings are set';
+    } else {
+        $status = 'Error';
+        $msg = 'Mandatory PHP settings are wrong: ' . implode(', ', $errors);
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:php_settings',$status, $msg],
     ]);
 })->hidden();
