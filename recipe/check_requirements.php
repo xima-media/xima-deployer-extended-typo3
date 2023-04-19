@@ -17,13 +17,13 @@ task('check:requirements', [
     'check:env_perms',
     'check:env_instance',
     'check:env_vars',
-    'check:domains',
-    'check:urls',
     'check:mysql',
     'check:php_extensions',
-    'check:php_settings',
+    'check:domains',
+    'check:urls',
     'check:vhost_base',
     'check:vhost_release',
+    'check:php_settings',
     'check:summary'
 ]);
 
