@@ -425,30 +425,47 @@ EOD;
 
 desc('Ensure apache virtualhost for TYPO3_BASE_URL matches requirements');
 task('check:vhost_base', function() {
-    $domain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'], PHP_URL_HOST);
+    $vars = EnvUtility::getRemoteEnvVars();
+    $domain = parse_url($vars['TYPO3_BASE_URL'], PHP_URL_HOST);
+    $aliases = array();
+    foreach ($vars as $key => $value) {
+        if (preg_match('/TYPO3\_ALIAS\_URL\_[0-9]+/', $key)) {
+            $aliases[] = parse_url($vars[$key], PHP_URL_HOST);
+        }
+    }
     $docRoot = get('deploy_path') . '/current/public';
-    $vhost = run('grep "\s' . $domain . '" /etc/apache2/sites-enabled/ -Rl');
     $errors = array();
-
-    // check if DocumentRoot is configured
-    if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-        $errors[] = "DocumentRoot";
-    }
-    // check if Directory is configured
-    if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-        $errors[] = "<Directory>";
-    }
-    // check if .htaccess is enabled
-    if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = "AllowOverride All";
-    }
-    // check if vHost contains FollowSymLinks
-    if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = "FollowSymLinks";
-    }
-    // // check if vHost contains Multiviews
-    if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = "Multiviews";
+    // check if vHost exists
+    $vhost = run('grep -Rls "\s' . $domain . '" /etc/apache2/sites-enabled/ || echo "1"');
+    if ($vhost === '1') {
+        $errors[] = 'vHost not found for' . $domain;
+    } else {
+        // check if aliases are configured
+        foreach ($aliases as $alias) {
+            if (run('grep ServerAlias "' . $vhost . '" | grep -q "' . $alias . '"; echo $?') === '1') {
+                $errors[] = 'Alias ' . $alias . 'missing';
+            }
+        }
+        // check if DocumentRoot is configured
+        if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+            $errors[] = "DocumentRoot";
+        }
+        // check if Directory is configured
+        if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+            $errors[] = "<Directory>";
+        }
+        // check if .htaccess is enabled
+        if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
+            $errors[] = "AllowOverride All";
+        }
+        // check if vHost contains FollowSymLinks
+        if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
+            $errors[] = "FollowSymLinks";
+        }
+        // // check if vHost contains Multiviews
+        if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
+            $errors[] = "Multiviews";
+        }
     }
 
     if (empty($errors)) {
