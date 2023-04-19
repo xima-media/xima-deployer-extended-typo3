@@ -13,8 +13,8 @@ desc('Ensure deployment requirements are fulfilled');
 task('check:requirements', [
     'check:locales',
     'check:user',
-    'check:permissions',
-    'check:env_perms',
+    'check:dir',
+    'check:env',
     'check:env_instance',
     'check:env_vars',
     'check:mysql',
@@ -62,11 +62,15 @@ task('check:user', function () {
     $primaryUserGroup = run('id -gn');
     $results = [];
 
-    if ($userName === $remoteUser && $primaryUserGroup === 'www-data') {
-        $results[] = ['check:user', 'Ok', 'SSH user is ' . $remoteUser . ' and with primary group ' . $primaryUserGroup ];
-    } else {
-        $results[] = ['check:user', 'Error', 'SSH user must be remote_user' . $remoteUser . '(is ' . $userName . ') and primary group must be www-data (is ' . $primaryUserGroup . ')' ];
+    if ($userName !== $remoteUser) {
+        $results[] = ['check:user', 'Error', 'SSH user (' . $userName . ') does not match deployer remote_user (' . $remoteUser . ')'];
     }
+    $results[] = ['check:user', 'Ok', 'SSH user matches deployer remote_user ' . $remoteUser];
+
+    if ($primaryUserGroup !== 'www-data') {
+        $results[] = ['check:user', 'Error', 'Primary user group (' . $primaryUserGroup .') must be www-data'];
+    }
+    $results[] = ['check:user', 'Ok', 'Primary user group is ' . $primaryUserGroup];
 
     set('requirement_rows', [
         ...get('requirement_rows'),
@@ -75,21 +79,30 @@ task('check:user', function () {
 })->hidden();
 
 desc('Ensure application directory exists with correct permissions');
-task('check:permissions', function () {
+task('check:dir', function () {
     $results = [];
     if (!test('[ -d {{deploy_path}} ]')) {
-        $results[] = [ 'check:permissions', 'Error', 'deploy_path {{deploy_path}} does not exist'];
+        $results[] = [ 'check:dir', 'Error', 'deploy_path {{deploy_path}} does not exist'];
     } else {
         $remoteUser = get('remote_user');
         $owner = run('stat -c "%U" ' . get('deploy_path'));
         $group = run('stat -c "%G" ' . get('deploy_path'));
         $mode  = run('stat -c "%a" ' . get('deploy_path'));
 
-        if ($mode === '2770' && $owner === $remoteUser && $group === 'www-data') {
-            $results[] = ['check:permissions', 'Ok', get('deploy_path') . ' has owner ' . $owner . ', group ' . $group . ', with mode ' . $mode];
-        } else {
-            $results[] = ['check:permissions', 'Error', get('deploy_path') . ' needs owner ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with mode 2770 (is ' . $mode . ')' ];
+        if ($owner !== $remoteUser) {
+            $results[] = ['check:dir', 'Error', $remoteUser . ' is not owner of ' . get('deploy_path')];
         }
+        $results[] = ['check:dir', 'Ok', $remoteUser . ' is owner of ' . get('deploy_path')];
+        
+        if ($group !== 'www-data') {
+            $results[] = ['check:dir', 'Error', 'www-data is not group of ' . get('deploy_path')];
+        }
+        $results[] = ['check:dir', 'Ok', 'www-data is group of ' . get('deploy_path')];
+
+        if ($mode !== '2770') {
+            $results[] = ['check:dir', 'Error', 'Unix permission is' . $mode . ' (must be 2770) for ' . get('deploy_path')];
+        }
+        $results[] = ['check:dir', 'Ok', 'Unix permission is ' . $mode . ' for ' . get('deploy_path')];
     }
 
     set('requirement_rows', [
@@ -99,10 +112,10 @@ task('check:permissions', function () {
 })->hidden();
 
 desc('Ensure .env exists with correct permissions');
-task('check:env_perms', function() {
+task('check:env', function() {
     $results = [];
     if (!test('[ -f {{deploy_path}}/shared/.env ]')) {
-        $results[] = ['check:env_perms','Error', 'Environment file {{deploy_path}}/shared/.env does not exist'];
+        $results[] = ['check:env','Error', 'Environment file {{deploy_path}}/shared/.env does not exist'];
     } else {
         $env = get('deploy_path') . '/shared/.env';
         $remoteUser = get('remote_user');
@@ -110,11 +123,20 @@ task('check:env_perms', function() {
         $group = run('stat -c "%G" ' . $env);
         $mode  = run('stat -c "%a" ' . $env);
 
-        if ($mode === '640' && $owner === $remoteUser && $group === 'www-data') {
-            $results[] = ['check:env_perms','Ok', $env . ' has owner ' . $owner . ', group ' . $group . ', mode ' . $mode];
-        } else {
-            $results[] = ['check:env_perms','Error', $env . ' needs owner ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with mode 640 (is ' . $mode . ')'];
+        if ($owner !== $remoteUser) {
+            $results[] = ['check:env', 'Error', $remoteUser . ' is not owner of ' . $env];
         }
+        $results[] = ['check:env', 'Ok', $remoteUser . ' is owner of ' . $env];
+        
+        if ($group !== 'www-data') {
+            $results[] = ['check:env', 'Error', 'www-data is not group of ' . $env];
+        }
+        $results[] = ['check:env', 'Ok', 'www-data is group of ' . $env];
+
+        if ($mode !== '640') {
+            $results[] = ['check:env', 'Error', 'Unix permission is' . $mode . ' (must be 640) for ' . $env];
+        }
+        $results[] = ['check:env', 'Ok', 'Unix permission is ' . $mode . ' for ' . $env];
     }
 
     set('requirement_rows', [
