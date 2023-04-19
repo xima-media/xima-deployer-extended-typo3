@@ -172,10 +172,10 @@ task('check:env_vars', function() {
     foreach ($parameters as $parameter) {
         if (!array_key_exists($parameter, $vars)) {
             $missing[] = $parameter;
-        } else {
-            if (test('[ -z ' . $vars[$parameter] .' ]')) {
-                $empty[] = $parameter;
-            }
+            continue;
+        }
+        if (test('[ -z ' . $vars[$parameter] .' ]')) {
+            $empty[] = $parameter;
         }
     }
 
@@ -243,11 +243,12 @@ task('check:urls', function() {
         $headers = @get_headers($url, true);
         if (!$headers) {
             $failed[] = $url . ': HTTP request failed';
-        } else {
-            $statusCode = $headers[0];
-            if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
-                $failed[] = $url . ': ' . $statusCode;
-            }
+            continue;
+        }
+
+        $statusCode = $headers[0];
+        if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
+            $failed[] = $url . ': ' . $statusCode;
         }
     }
 
