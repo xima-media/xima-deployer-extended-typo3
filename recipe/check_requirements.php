@@ -42,7 +42,7 @@ task('check:locales', function () {
     $missing = [];
 
     foreach ($required as $locale) {
-        if (str_contains($available, $locale) === false) {
+        if (!str_contains($available, $locale)) {
             $missing[] = $locale;
         }
     }
@@ -207,7 +207,7 @@ task('check:dns', function() {
     
     $unresolved = [];
     foreach ($domains as $domain) {
-        if (checkdnsrr($domain, 'A') === false) {
+        if (!checkdnsrr($domain, 'A')) {
             $unresolved[] = $domain;
         }
     }
@@ -241,7 +241,7 @@ task('check:urls', function() {
     $failed = [];
     foreach ($urls as $url) {
         $headers = @get_headers($url, true);
-        if ($headers === false) {
+        if (!$headers) {
             $failed[] = $url . ': HTTP request failed';
         } else {
             $statusCode = $headers[0];
@@ -324,7 +324,7 @@ task('check:php_extensions', function() {
     $missing = [];
 
     foreach ($required as $extension) {
-        if (stripos($available, $extension) === false) {
+        if (!stripos($available, $extension)) {
             $missing[] = $extension;
         }
     }
