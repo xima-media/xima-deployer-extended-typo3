@@ -264,7 +264,7 @@ task('check:mysql', function() {
         return;
     }
 
-    if ($vars['TYPO3_CONF_VARS__DB__Connections__Default__user'] === '2048') {
+    if ($vars['TYPO3_CONF_VARS__DB__Connections__Default__driverOptions__flags'] ?? '' === '2048') {
         // if ssl is needed
         $query = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' --ssl ' . $dbname . ' > /dev/null 2>&1; echo $?');
     } else {
