@@ -37,9 +37,9 @@ task('check:summary', function () {
 
 desc('Ensure system locales are present');
 task('check:locales', function () {
-    $required = array('de_DE.utf8', 'en_US.utf8');
+    $required = ['de_DE.utf8', 'en_US.utf8'];
     $available = run('locale -a');
-    $missing = array();
+    $missing = [];
 
     foreach ($required as $locale) {
         if (str_contains($available, $locale) === false) {
@@ -157,7 +157,7 @@ task('check:env_instance', function() {
 desc('Ensure mandatory parameters in .env are present');
 task('check:env_vars', function() {
     $vars = EnvUtility::getRemoteEnvVars();
-    $parameters = array(
+    $parameters = [
         'TYPO3_BASE_URL',
         'TYPO3_RELEASE_URL',
         'TYPO3_CONF_VARS__DB__Connections__Default__dbname',
@@ -165,9 +165,9 @@ task('check:env_vars', function() {
         'TYPO3_CONF_VARS__DB__Connections__Default__password',
         'TYPO3_CONF_VARS__DB__Connections__Default__port',
         'TYPO3_CONF_VARS__DB__Connections__Default__user'
-    );
-    $missing = array();
-    $empty = array();
+    ];
+    $missing = [];
+    $empty = [];
     
     foreach ($parameters as $parameter) {
         if (!array_key_exists($parameter, $vars)) {
@@ -198,14 +198,14 @@ task('check:dns', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $baseDomain = parse_url($vars['TYPO3_BASE_URL'], PHP_URL_HOST);
     $releaseDomain = parse_url($vars['TYPO3_RELEASE_URL'], PHP_URL_HOST);
-    $domains = array($baseDomain, $releaseDomain);
+    $domains = [$baseDomain, $releaseDomain];
     foreach ($vars as $key => $value) {
         if (preg_match('/TYPO3\_ALIAS\_URL\_[0-9]+/', $key)) {
             $domains[] = parse_url($vars[$key], PHP_URL_HOST);
         }
     }
     
-    $unresolved = array();
+    $unresolved = [];
     foreach ($domains as $domain) {
         if (checkdnsrr($domain, 'A') === false) {
             $unresolved[] = $domain;
@@ -231,14 +231,14 @@ task('check:urls', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $baseUrl = $vars['TYPO3_BASE_URL'];
     $releaseUrl = $vars['TYPO3_RELEASE_URL'];
-    $urls = array($baseUrl, $releaseUrl);
+    $urls = [$baseUrl, $releaseUrl];
     foreach ($vars as $key => $value) {
         if (preg_match('/TYPO3\_ALIAS\_URL\_[0-9]+/', $key)) {
             $urls[] = $vars[$key];
         }
     }
 
-    $failed = array();
+    $failed = [];
     foreach ($urls as $url) {
         $headers = @get_headers($url, true);
         if ($headers === false) {
@@ -300,7 +300,7 @@ task('check:mysql', function() {
 
 desc('Ensure always mandatory php extensions are present');
 task('check:php_extensions', function() {
-    $required = array(
+    $required = [
         'pdo',
         'json',
         'pcre',
@@ -319,9 +319,9 @@ task('check:php_extensions', function() {
         'openssl',
         'pdo_mysql',
         'apcu'
-    );
+    ];
     $available = run('php -m');
-    $missing = array();
+    $missing = [];
 
     foreach ($required as $extension) {
         if (stripos($available, $extension) === false) {
@@ -350,7 +350,7 @@ task('check:php_settings', function() {
     $phpFile = 'phpinfo_' . uniqid() . '.php';
     $configToJson = <<<'EOD'
 <?php
-\$data = array(
+\$data = [
     'php_sapi_name' => php_sapi_name(),                        // must be "fpm-fcgi"
     'default_timezone' => date_default_timezone_get(),         // must be Europe/Berlin
     'memory_limit' => ini_get('memory_limit'),                 // must be 512M
@@ -359,7 +359,7 @@ task('check:php_settings', function() {
     'post_max_size' => ini_get('post_max_size'),               // must be 21M+
     'upload_max_filesize' => ini_get('upload_max_filesize'),   // must be 20M+
     'opcache.enable' => ini_get('opcache.enable'),             // must be 1
-);
+];
 header(\"Content-Type: application/json\");
 echo json_encode(\$data);
 exit();
@@ -374,7 +374,7 @@ EOD;
         $msg = 'Could not read php settings, vHost may be misconfigured';
     } else {
         $config =(json_decode($json, true));
-        $errors = array();
+        $errors = [];
     
         function return_bytes ($size_str) {
             switch (substr ($size_str, -1)) {
@@ -432,14 +432,14 @@ desc('Ensure apache virtualhost for TYPO3_BASE_URL and TYPO3_ALIAS_URL_* matches
 task('check:vhost_base', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $domain = parse_url($vars['TYPO3_BASE_URL'], PHP_URL_HOST);
-    $aliases = array();
+    $aliases = [];
     foreach ($vars as $key => $value) {
         if (preg_match('/TYPO3\_ALIAS\_URL\_[0-9]+/', $key)) {
             $aliases[] = parse_url($vars[$key], PHP_URL_HOST);
         }
     }
     $docRoot = get('deploy_path') . '/current/public';
-    $errors = array();
+    $errors = [];
 
     // ensure vHost exists
     $vhost = run('grep -Rls "\s' . $domain . '" /etc/apache2/sites-enabled/ || echo "1"');
@@ -493,7 +493,7 @@ desc('Ensure apache virtualhost for TYPO3_RELEASE_URL matches requirements');
 task('check:vhost_release', function() {
     $domain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'], PHP_URL_HOST);
     $docRoot = get('deploy_path') . '/release/public';
-    $errors = array();
+    $errors = [];
 
     // ensure vHost exists
     $vhost = run('grep -Rls "\s' . $domain . '" /etc/apache2/sites-enabled/ || echo "1"');
