@@ -9,7 +9,7 @@ use Xima\XimaDeployerExtendedTypo3\Utility\EnvUtility;
 
 set('requirement_rows', []);
 
-desc('Check if deployment requirements are fulfilled');
+desc('ensure deployment requirements are fulfilled');
 task('check:requirements', [
     'check:locales',
     'check:user',
@@ -368,54 +368,59 @@ EOD;
     run('mkdir -p ' . $docRoot);
     run('echo "' . $configToJson . '" > ' . $docRoot . $phpFile);
     //  and read json from webserver
-    $json = run('wget ' . $baseUrl . '/' . $phpFile . ' -q -O -');
-    // clean up
-    run("rm " .$docRoot . $phpFile);
-
-    $config =(json_decode($json, true));
-    $errors = array();
-
-    function return_bytes ($size_str) {
-        switch (substr ($size_str, -1)) {
-            case 'M': case 'm': return (int)$size_str * 1048576;
-            case 'K': case 'k': return (int)$size_str * 1024;
-            case 'G': case 'g': return (int)$size_str * 1073741824;
-            default: return $size_str;
+    $json = run('wget ' . $baseUrl . '/' . $phpFile . ' -q -O - || echo "1"');
+    if ($json === '1') {
+        $status = 'Error';
+        $msg = 'Could not read php config from url, vHost may be misconfigured';
+    } else {
+        $config =(json_decode($json, true));
+        $errors = array();
+    
+        function return_bytes ($size_str) {
+            switch (substr ($size_str, -1)) {
+                case 'M': case 'm': return (int)$size_str * 1048576;
+                case 'K': case 'k': return (int)$size_str * 1024;
+                case 'G': case 'g': return (int)$size_str * 1073741824;
+                default: return $size_str;
+            }
+        }
+        
+        if ($config['php_sapi_name'] !== 'fpm-fcgi') {
+            $errors[] = 'PHP-FPM not enabled';
+        }
+        if ($config['default_timezone'] !== 'Europe/Berlin') {
+            $errors[] = 'default timezone is not Europe/Berlin';
+        }
+        if (intval(return_bytes($config['memory_limit'])) < 536870912) {
+            $errors[] = 'memory_limit is less than 512M';
+        }
+        if (intval($config['max_execution_time']) < 240 ) {
+            $errors[] = 'max_execution_time is lower than 240s';
+        }
+        if (intval($config['max_input_vars']) < 1500 ) {
+            $errors[] = 'max_input_vars is lower than 1500';
+        }
+        if (intval(return_bytes($config['post_max_size'])) < 22020096) {
+            $errors[] = 'post_max_size is less than 21M';
+        }
+        if (intval(return_bytes($config['upload_max_filesize'])) < 20971520) {
+            $errors[] = 'upload_max_filesize is less than 20M';
+        }
+        if ($config['opcache.enable'] !== '1' ) {
+            $errors[] = 'opcache is disabled';
+        }
+    
+        if (empty($errors)) {
+            $status = 'Ok';
+            $msg = 'Mandatory PHP settings are set';
+        } else {
+            $status = 'Error';
+            $msg = 'Mandatory PHP settings are wrong: ' . implode(', ', $errors);
         }
     }
-
-    if ($config['php_sapi_name'] !== 'fpm-fcgi') {
-        $errors[] = 'PHP-FPM not enabled';
-    }
-    if ($config['default_timezone'] !== 'Europe/Berlin') {
-        $errors[] = 'default timezone is not Europe/Berlin';
-    }
-    if (intval(return_bytes($config['memory_limit'])) < 536870912) {
-        $errors[] = 'memory_limit is less than 512M';
-    }
-    if (intval($config['max_execution_time']) < 240 ) {
-        $errors[] = 'max_execution_time is lower than 240s';
-    }
-    if (intval($config['max_input_vars']) < 1500 ) {
-        $errors[] = 'max_input_vars is lower than 1500';
-    }
-    if (intval(return_bytes($config['post_max_size'])) < 22020096) {
-        $errors[] = 'post_max_size is less than 21M';
-    }
-    if (intval(return_bytes($config['upload_max_filesize'])) < 20971520) {
-        $errors[] = 'upload_max_filesize is less than 20M';
-    }
-    if ($config['opcache.enable'] !== '1' ) {
-        $errors[] = 'opcache is disabled';
-    }
-
-    if (empty($errors)) {
-        $status = 'Ok';
-        $msg = 'Mandatory PHP settings are set';
-    } else {
-        $status = 'Error';
-        $msg = 'Mandatory PHP settings are wrong: ' . implode(', ', $errors);
-    }
+    
+    // clean up
+    run("rm " .$docRoot . $phpFile);
 
     set('requirement_rows', [
         ...get('requirement_rows'),
@@ -423,7 +428,7 @@ EOD;
     ]);
 })->hidden();
 
-desc('Ensure apache virtualhost for TYPO3_BASE_URL matches requirements');
+desc('Ensure apache virtualhost for TYPO3_BASE_URL and TYPO3_ALIAS_URL_* matches requirements');
 task('check:vhost_base', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $domain = parse_url($vars['TYPO3_BASE_URL'], PHP_URL_HOST);
@@ -435,45 +440,47 @@ task('check:vhost_base', function() {
     }
     $docRoot = get('deploy_path') . '/current/public';
     $errors = array();
-    // check if vHost exists
+
+    // ensure vHost exists
     $vhost = run('grep -Rls "\s' . $domain . '" /etc/apache2/sites-enabled/ || echo "1"');
     if ($vhost === '1') {
-        $errors[] = 'vHost not found for' . $domain;
+        $status = 'Error';
+        $msg = 'vHost not found for ' . $domain;
     } else {
-        // check if aliases are configured
+        // ensure aliases are configured
         foreach ($aliases as $alias) {
             if (run('grep ServerAlias "' . $vhost . '" | grep -q "' . $alias . '"; echo $?') === '1') {
-                $errors[] = 'Alias ' . $alias . 'missing';
+                $errors[] = 'Alias ' . $alias . ' missing';
             }
         }
-        // check if DocumentRoot is configured
+        // ensure DocumentRoot is configured
         if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
             $errors[] = 'DocumentRoot';
         }
-        // check if Directory is configured
+        // ensure Directory is configured
         if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
             $errors[] = '<Directory>';
         }
-        // check if .htaccess is enabled
+        // ensure .htaccess  is enabled
         if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
             $errors[] = 'AllowOverride All';
         }
-        // check if vHost contains FollowSymLinks
+        // ensure FollowSymLinks is enabled
         if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
             $errors[] = 'FollowSymLinks';
         }
-        // // check if vHost contains Multiviews
+        // // ensure Multiviews is enabled
         if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
             $errors[] = 'Multiviews';
         }
-    }
 
-    if (empty($errors)) {
-        $status = 'Ok';
-        $msg = 'vHost ' . $vhost . ' configuration is ok';
-    } else {
-        $status = 'Error';
-        $msg = 'vHost ' . $vhost . ' configuration errors found for: ' . implode(', ', $errors);
+        if (empty($errors)) {
+            $status = 'Ok';
+            $msg = 'Configuration is ok: ' . $vhost;
+        } else {
+            $status = 'Error';
+            $msg = 'Errors found in ' .$vhost . ': ' . implode(', ', $errors);
+        }
     }
 
     set('requirement_rows', [
@@ -486,40 +493,46 @@ desc('Ensure apache virtualhost for TYPO3_RELEASE_URL matches requirements');
 task('check:vhost_release', function() {
     $domain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'], PHP_URL_HOST);
     $docRoot = get('deploy_path') . '/release/public';
-    $vhost = run('grep "\s' . $domain . '" /etc/apache2/sites-enabled/ -Rl');
     $errors = array();
 
-    // ensure DocumentRoot is configured
-    if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-        $errors[] = 'DocumentRoot';
-    }
-    // ensure <Directory> is configured
-    if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-        $errors[] = '<Directory>';
-    }
-    // ensure .htaccess is enabled
-    if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = 'AllowOverride All';
-    }
-    // ensure FollowSymLinks is enabled
-    if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = 'FollowSymLinks';
-    }
-    // ensure Multiviews is enabled
-    if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = 'Multiviews';
-    }
-    // ensure release variable is set
-    if (run('grep -q "SetEnv IS_RELEASE_REQUEST 1" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = 'SetEnv IS_RELEASE_REQUEST 1';
-    }
-
-    if (empty($errors)) {
-        $status = 'Ok';
-        $msg = 'vHost ' . $vhost . ' configuration is ok';
-    } else {
+    // ensure vHost exists
+    $vhost = run('grep -Rls "\s' . $domain . '" /etc/apache2/sites-enabled/ || echo "1"');
+    if ($vhost === '1') {
         $status = 'Error';
-        $msg = 'vHost ' . $vhost . ' configuration errors found for: ' . implode(', ', $errors);
+        $msg = 'vHost not found for ' . $domain;
+    } else {
+        // ensure DocumentRoot is configured
+        if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+            $errors[] = 'DocumentRoot';
+        }
+        // ensure <Directory> is configured
+        if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+            $errors[] = '<Directory>';
+        }
+        // ensure .htaccess is enabled
+        if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
+            $errors[] = 'AllowOverride All';
+        }
+        // ensure FollowSymLinks is enabled
+        if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
+            $errors[] = 'FollowSymLinks';
+        }
+        // ensure Multiviews is enabled
+        if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
+            $errors[] = 'Multiviews';
+        }
+        // ensure release variable is set
+        if (run('grep -q "SetEnv IS_RELEASE_REQUEST 1" "' . $vhost . '";echo $?') === '1') {
+            $errors[] = 'SetEnv IS_RELEASE_REQUEST 1';
+        }
+
+        if (empty($errors)) {
+            $status = 'Ok';
+            $msg = 'Configuration is ok: ' . $vhost;
+        } else {
+            $status = 'Error';
+            $msg = 'Errors found in ' .$vhost . ': ' . implode(', ', $errors);
+        }
     }
 
     set('requirement_rows', [
