@@ -162,7 +162,6 @@ task('check:env_vars', function() {
         }
         if (test('[ -z ' . $vars[$variable] .' ]')) {
             $results[] = ['check:env_vars','Error', 'Empty variable: ' . $variable];
-            $empty[] = $variable;
         }
         $results[] = ['check:env_vars','Ok', 'Variable is set: ' . $variable];
     }
@@ -191,7 +190,7 @@ task('check:dns', function() {
     foreach ($urls as $url) {
         $host = @parse_url($url, PHP_URL_HOST);
         if (!$host) {
-            $results[] = [ 'check:dns', 'Error', 'Malformed url: ' . $url ];
+            $results[] = [ 'check:dns', 'Error', 'URL malformed or missing ' . $url ];
             continue;
         }
         if (!checkdnsrr($host, 'A')) {
@@ -223,6 +222,10 @@ task('check:urls', function() {
 
     array_filter($urls);
     foreach ($urls as $url) {
+        if (!parse_url($url, PHP_URL_HOST)) {
+            $results[] = ['check:urls','Error', 'URL malformed or missing' . $url];
+            continue;
+        }
         $headers = @get_headers($url, true);
         if (!$headers) {
             $results[] = ['check:urls','Error', 'HTTP request failed:' . $url];
@@ -254,14 +257,20 @@ task('check:mysql', function() {
 
     if (in_array('', [$dbname, $host, $port, $user, $password ])) {
         $results[] = ['check:mysql', 'Error', 'Undefined database variable'];
-    } else {
-        if ($vars['TYPO3_CONF_VARS__DB__Connections__Default__user'] === '2048') {
-            // if ssl is needed
-            $query = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' --ssl ' . $dbname . ' > /dev/null 2>&1; echo $?');
-        } else {
-            $query = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' ' . $dbname . ' > /dev/null 2>&1; echo $?');
-        }
+        set('requirement_rows', [
+            ...get('requirement_rows'),
+            ...$results
+        ]);
+        return;
     }
+
+    if ($vars['TYPO3_CONF_VARS__DB__Connections__Default__user'] === '2048') {
+        // if ssl is needed
+        $query = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' --ssl ' . $dbname . ' > /dev/null 2>&1; echo $?');
+    } else {
+        $query = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' ' . $dbname . ' > /dev/null 2>&1; echo $?');
+    }
+
     if ($query === '0') {
         $results[] = ['check:mysql', 'Ok', 'Database is accessible: ' . $dbname];
     } elseif ($query === '1') {
@@ -320,11 +329,11 @@ desc('Ensure Apache runs PHP with required settings');
 task('check:php_settings', function() {
     $results = [];
     $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'] ?? '';
-    if ($baseUrl === '') {
-        $results[] = ['check:php_settings','Error', 'TYPO3_BASE_URL is undefined'];
+    if (!parse_url($baseUrl, PHP_URL_HOST)) {
+        $results[] = ['check:php_settings','Error', 'TYPO3_BASE_URL is undefined or missing'];
         set('requirement_rows', [
             ...get('requirement_rows'),
-            ...$response
+            ...$results
         ]);
         return;
     }
@@ -334,7 +343,7 @@ task('check:php_settings', function() {
         $results[] = ['check:php_settings','Error', 'Invalid HTTP response ' . $statusCode . ': ' . $url];
         set('requirement_rows', [
             ...get('requirement_rows'),
-            ...$response
+            ...$results
         ]);
         return;
     }
@@ -379,7 +388,7 @@ EOD;
         $results[] = ['check:php_settings','Error', 'Could not read php settings, vHost may be misconfigured'];
         set('requirement_rows', [
             ...get('requirement_rows'),
-            ...$response
+            ...$results
         ]);
         return;
     }
@@ -388,7 +397,7 @@ EOD;
         $results[] = ['check:php_settings','Error', 'Unable to parse json'];
         set('requirement_rows', [
             ...get('requirement_rows'),
-            ...$response
+            ...$results
         ]);
         return;
     }
