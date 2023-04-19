@@ -49,10 +49,10 @@ task('check:locales', function () {
 
     if (empty($missing)) {
         $status = 'Ok';
-        $msg = 'Required locales are installed: ' . implode(', ', $required);
+        $msg = 'Locales are installed: ' . implode(', ', $required);
     } else {
         $status = 'Error';
-        $msg = 'Required locales are missing: ' .implode(', ', $missing);
+        $msg = 'Locales are missing: ' .implode(', ', $missing);
     }
 
     set('requirement_rows', [
@@ -69,10 +69,10 @@ task('check:user', function () {
 
     if ($userName === $remoteUser && $primaryUserGroup === 'www-data') {
         $status = 'Ok';
-        $msg = 'SSH user matches remote_user ' . $remoteUser . ' and is member of ' . $primaryUserGroup;
+        $msg = 'SSH user is ' . $remoteUser . ' and with primary group ' . $primaryUserGroup;
     } else {
         $status = 'Error';
-        $msg = 'SSH user must be' . $remoteUser . '(is ' . $userName . ') and primary group must be www-data (is ' . $primaryUserGroup . ')';
+        $msg = 'SSH user must be remote_user' . $remoteUser . '(is ' . $userName . ') and primary group must be www-data (is ' . $primaryUserGroup . ')';
     }
 
     set('requirement_rows', [
@@ -91,10 +91,10 @@ task('check:permissions', function () {
 
         if ($mode === '2770' && $owner === $remoteUser && $group === 'www-data') {
             $status = 'Ok';
-            $msg = get('deploy_path') . ' is owned by user ' . $owner . ', group ' . $group . ', with permission ' . $mode;
+            $msg = get('deploy_path') . ' has owner ' . $owner . ', group ' . $group . ', with mode ' . $mode;
         } else {
             $status = 'Error';
-            $msg = get('deploy_path') . ' must be owned by user ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with permission 2770 (is ' . $mode . ')';
+            $msg = get('deploy_path') . ' needs owner ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with mode 2770 (is ' . $mode . ')';
         }
     } else {
         $status = 'Error';
@@ -118,10 +118,10 @@ task('check:env_perms', function() {
 
         if ($mode === '640' && $owner === $remoteUser && $group === 'www-data') {
             $status = 'Ok';
-            $msg = $env . ' is owned by user ' . $owner . ', group ' . $group . ', with permission ' . $mode;
+            $msg = $env . ' has owner ' . $owner . ', group ' . $group . ', mode ' . $mode;
         } else {
             $status = 'Error';
-            $msg = $env . ' must be owned by user ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with permission 640 (is ' . $mode . ')';
+            $msg = $env . ' needs owner ' . $remoteUser . ' (is ' . $owner . '), group www-data (is ' . $group . '), with mode 640 (is ' . $mode . ')';
         }
         
     } else {
@@ -142,10 +142,10 @@ task('check:env_instance', function() {
 
     if ($currentHostname === $instance) {
         $status = 'Ok';
-        $msg = 'hostname (' . $currentHostname . ') matches INSTANCE from .env (' . $instance . ')';
+        $msg = 'Deployer hostname (' . $currentHostname . ') matches INSTANCE (' . $instance . ')';
     } else {
         $status = 'Error';
-        $msg = 'hostname (' . $currentHostname . ') does not match INSTANCE from .env (' . $instance . ')';
+        $msg = 'Deployer hostname (' . $currentHostname . ') does not match INSTANCE (' . $instance . ')';
     }
 
     set('requirement_rows', [
@@ -154,7 +154,7 @@ task('check:env_instance', function() {
     ]);
 })->hidden();
 
-desc('Ensure mandatory .env parameters are configured');
+desc('Ensure mandatory parameters in .env are present');
 task('check:env_vars', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $parameters = array(
@@ -181,10 +181,10 @@ task('check:env_vars', function() {
 
     if (empty($empty) && empty($missing)) {
         $status = 'Ok';
-        $msg = 'Mandatory parameters in .env are configured';
+        $msg = 'Mandatory parameters are present';
     } else {
         $status = 'Error';
-        $msg = 'Mandatory parameters in .env are missing (' . implode(', ', $missing) . ') or empty (' . implode(', ', $empty) . ')';
+        $msg = 'Mandatory parameters are missing (' . implode(', ', $missing) . ') or empty (' . implode(', ', $empty) . ')';
     }
 
     set('requirement_rows', [
@@ -214,10 +214,10 @@ task('check:dns', function() {
 
     if (empty($unresolved)) {
         $status = 'Ok';
-        $msg = 'DNS A records do exist for ' . implode(', ', $domains);
+        $msg = 'A records found: ' . implode(', ', $domains);
     } else {
         $status = 'Error';
-        $msg = 'DNS A records were not found for ' . implode(', ', $unresolved);
+        $msg = 'A records missing: ' . implode(', ', $unresolved);
     }
 
     set('requirement_rows', [
@@ -331,7 +331,7 @@ task('check:php_extensions', function() {
 
     if (empty($missing)) {
         $status = 'Ok';
-        $msg = 'Mandatory PHP extensions are present, perform manual checks for additional extensions like ldap and redis';
+        $msg = 'Mandatory PHP extensions are present. Perform manual checks for additional extensions (ldap, redis,...';
     } else {
         $status = 'Error';
         $msg = 'Mandatory extensions are missing: ' . implode(', ', $missing);
@@ -343,7 +343,7 @@ task('check:php_extensions', function() {
     ]);
 })->hidden();
 
-desc('Ensure mandatory php settings are set');
+desc('Ensure Apache runs PHP with required settings');
 task('check:php_settings', function() {
     $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
     $docRoot = get('deploy_path') . '/current/public/';
@@ -371,7 +371,7 @@ EOD;
     $json = run('wget ' . $baseUrl . '/' . $phpFile . ' -q -O - || echo "1"');
     if ($json === '1') {
         $status = 'Error';
-        $msg = 'Could not read php config from url, vHost may be misconfigured';
+        $msg = 'Could not read php settings, vHost may be misconfigured';
     } else {
         $config =(json_decode($json, true));
         $errors = array();
@@ -386,25 +386,25 @@ EOD;
         }
         
         if ($config['php_sapi_name'] !== 'fpm-fcgi') {
-            $errors[] = 'PHP-FPM not enabled';
+            $errors[] = 'PHP-FPM not enabled (' . $config['php_sapi_name'] . ')';
         }
         if ($config['default_timezone'] !== 'Europe/Berlin') {
-            $errors[] = 'default timezone is not Europe/Berlin';
+            $errors[] = 'Default timezone is' . $config['default_timezone'];
         }
         if (intval(return_bytes($config['memory_limit'])) < 536870912) {
-            $errors[] = 'memory_limit is less than 512M';
+            $errors[] = 'memory_limit ' . $config['memory_limit'] . ' is less than 512M';
         }
         if (intval($config['max_execution_time']) < 240 ) {
-            $errors[] = 'max_execution_time is lower than 240s';
+            $errors[] = 'max_execution_time ' . $config['max_execution_time'] . ' is lower than 240s';
         }
         if (intval($config['max_input_vars']) < 1500 ) {
-            $errors[] = 'max_input_vars is lower than 1500';
+            $errors[] = 'max_input_vars ' . $config['max_input_vars'] . ' is lower than 1500';
         }
         if (intval(return_bytes($config['post_max_size'])) < 22020096) {
-            $errors[] = 'post_max_size is less than 21M';
+            $errors[] = 'post_max_size ' . $config['post_max_size'] . ' is less than 21M';
         }
         if (intval(return_bytes($config['upload_max_filesize'])) < 20971520) {
-            $errors[] = 'upload_max_filesize is less than 20M';
+            $errors[] = 'upload_max_filesize ' . $config['upload_max_filesize'] . ' is less than 20M';
         }
         if ($config['opcache.enable'] !== '1' ) {
             $errors[] = 'opcache is disabled';
@@ -412,10 +412,10 @@ EOD;
     
         if (empty($errors)) {
             $status = 'Ok';
-            $msg = 'Mandatory PHP settings are set';
+            $msg = 'PHP runs with sufficient configuration';
         } else {
             $status = 'Error';
-            $msg = 'Mandatory PHP settings are wrong: ' . implode(', ', $errors);
+            $msg = 'PHP runs with insufficient configuration: ' . implode(', ', $errors);
         }
     }
     
@@ -445,33 +445,33 @@ task('check:vhost_base', function() {
     $vhost = run('grep -Rls "\s' . $domain . '" /etc/apache2/sites-enabled/ || echo "1"');
     if ($vhost === '1') {
         $status = 'Error';
-        $msg = 'vHost not found for ' . $domain;
+        $msg = 'vHost not found or accessible for ' . $domain;
     } else {
         // ensure aliases are configured
         foreach ($aliases as $alias) {
             if (run('grep ServerAlias "' . $vhost . '" | grep -q "' . $alias . '"; echo $?') === '1') {
-                $errors[] = 'Alias ' . $alias . ' missing';
+                $errors[] = 'Alias missing: ' . $alias;
             }
         }
         // ensure DocumentRoot is configured
         if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-            $errors[] = 'DocumentRoot';
+            $errors[] = 'DocumentRoot undefined';
         }
         // ensure Directory is configured
         if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-            $errors[] = '<Directory>';
+            $errors[] = '<Directory> undefined';
         }
         // ensure .htaccess  is enabled
         if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = 'AllowOverride All';
+            $errors[] = 'AllowOverride All missing';
         }
         // ensure FollowSymLinks is enabled
         if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = 'FollowSymLinks';
+            $errors[] = 'FollowSymLinks missing';
         }
         // // ensure Multiviews is enabled
         if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = 'Multiviews';
+            $errors[] = 'Multiviews missing';
         }
 
         if (empty($errors)) {
@@ -499,31 +499,31 @@ task('check:vhost_release', function() {
     $vhost = run('grep -Rls "\s' . $domain . '" /etc/apache2/sites-enabled/ || echo "1"');
     if ($vhost === '1') {
         $status = 'Error';
-        $msg = 'vHost not found for ' . $domain;
+        $msg = 'vHost not found or accessible for ' . $domain;
     } else {
         // ensure DocumentRoot is configured
         if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-            $errors[] = 'DocumentRoot';
+            $errors[] = 'DocumentRoot undefined';
         }
         // ensure <Directory> is configured
         if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-            $errors[] = '<Directory>';
+            $errors[] = '<Directory> undefined';
         }
         // ensure .htaccess is enabled
         if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = 'AllowOverride All';
+            $errors[] = 'AllowOverride All missing';
         }
         // ensure FollowSymLinks is enabled
         if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = 'FollowSymLinks';
+            $errors[] = 'FollowSymLinks missing';
         }
         // ensure Multiviews is enabled
         if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = 'Multiviews';
+            $errors[] = 'Multiviews missing';
         }
         // ensure release variable is set
         if (run('grep -q "SetEnv IS_RELEASE_REQUEST 1" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = 'SetEnv IS_RELEASE_REQUEST 1';
+            $errors[] = '"SetEnv IS_RELEASE_REQUEST 1" missing';
         }
 
         if (empty($errors)) {
