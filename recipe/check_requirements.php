@@ -22,6 +22,8 @@ task('check:requirements', [
     'check:mysql',
     'check:php_extensions',
     'check:php_settings',
+    'check:vhost_base',
+    'check:vhost_release',
     'check:summary'
 ]);
 
@@ -331,7 +333,7 @@ task('check:php_extensions', function() {
 desc('Ensure mandatory php settings are set');
 task('check:php_settings', function() {
     $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'];
-    $webRoot = get('deploy_path') . '/current/public/';
+    $docRoot = get('deploy_path') . '/current/public/';
     $phpFile = 'phpinfo_' . uniqid() . '.php';
     $configToJson = <<<'EOD'
 <?php
@@ -350,12 +352,12 @@ echo json_encode(\$data);
 exit();
 EOD;
     // output config as json via webserver
-    run('mkdir -p ' . $webRoot);
-    run('echo "' . $configToJson . '" > ' . $webRoot . $phpFile);
+    run('mkdir -p ' . $docRoot);
+    run('echo "' . $configToJson . '" > ' . $docRoot . $phpFile);
     //  and read json from webserver
     $json = run('wget ' . $baseUrl . '/' . $phpFile . ' -q -O -');
     // clean up
-    run("rm " .$webRoot . $phpFile);
+    run("rm " .$docRoot . $phpFile);
 
     $config =(json_decode($json, true));
     $errors = array();
@@ -405,5 +407,93 @@ EOD;
     set('requirement_rows', [
         ...get('requirement_rows'),
         ['check:php_settings',$status, $msg],
+    ]);
+})->hidden();
+
+desc('Ensure apache virtualhost for TYPO3_BASE_URL matches requirements');
+task('check:vhost_base', function() {
+    $domain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'], PHP_URL_HOST);
+    $docRoot = get('deploy_path') . '/current/public';
+    $vhost = run('grep "\s' . $domain . '" /etc/apache2/sites-enabled/ -Rl');
+    $errors = array();
+
+    // check if DocumentRoot is configured
+    if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+        $errors[] = "DocumentRoot";
+    }
+    // check if Directory is configured
+    if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+        $errors[] = "<Directory>";
+    }
+    // check if .htaccess is enabled
+    if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
+        $errors[] = "AllowOverride All";
+    }
+    // check if vHost contains FollowSymLinks
+    if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
+        $errors[] = "FollowSymLinks";
+    }
+    // // check if vHost contains Multiviews
+    if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
+        $errors[] = "Multiviews";
+    }
+
+    if (empty($errors)) {
+        $status = 'Ok';
+        $msg = 'vHost ' . $vhost . ' configuration is ok';
+    } else {
+        $status = 'Error';
+        $msg = 'vHost ' . $vhost . ' configuration errors found for: ' . implode(', ', $errors);
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:vhost_base',$status, $msg],
+    ]);
+})->hidden();
+
+desc('Ensure apache virtualhost for TYPO3_RELEASE_URL matches requirements');
+task('check:vhost_release', function() {
+    $domain = parse_url(EnvUtility::getRemoteEnvVars()['TYPO3_RELEASE_URL'], PHP_URL_HOST);
+    $docRoot = get('deploy_path') . '/release/public';
+    $vhost = run('grep "\s' . $domain . '" /etc/apache2/sites-enabled/ -Rl');
+    $errors = array();
+
+    // ensure DocumentRoot is configured
+    if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+        $errors[] = "DocumentRoot";
+    }
+    // ensure <Directory> is configured
+    if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
+        $errors[] = "<Directory>";
+    }
+    // ensure .htaccess is enabled
+    if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
+        $errors[] = "AllowOverride All";
+    }
+    // ensure FollowSymLinks is enabled
+    if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
+        $errors[] = "FollowSymLinks";
+    }
+    // ensure Multiviews is enabled
+    if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
+        $errors[] = "Multiviews";
+    }
+    // ensure release variable is set
+    if (run('grep -q "SetEnv IS_RELEASE_REQUEST 1" "' . $vhost . '";echo $?') === '1') {
+        $errors[] = "SetEnv IS_RELEASE_REQUEST 1";
+    }
+
+    if (empty($errors)) {
+        $status = 'Ok';
+        $msg = 'vHost ' . $vhost . ' configuration is ok';
+    } else {
+        $status = 'Error';
+        $msg = 'vHost ' . $vhost . ' configuration errors found for: ' . implode(', ', $errors);
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ['check:vhost_release',$status, $msg],
     ]);
 })->hidden();
