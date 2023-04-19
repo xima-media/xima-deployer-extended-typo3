@@ -206,7 +206,6 @@ task('check:domains', function() {
     }
     
     $unresolved = array();
-
     foreach ($domains as $domain) {
         if (checkdnsrr($domain, "A") === false) {
             $unresolved[] = $domain;
@@ -227,28 +226,37 @@ task('check:domains', function() {
     ]);
 })->hidden();
 
-desc('Ensure TYPO3_BASE_URL and TYPO3_BASE_URL are reachable with HTTP code 200 or 404');
+desc('Ensure TYPO3_BASE_URL, TYPO3_BASE_URL and TYPO3_ALIAS_URL_* are reachable with HTTP code 200 or 404');
 task('check:urls', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $baseUrl = $vars['TYPO3_BASE_URL'];
     $releaseUrl = $vars['TYPO3_RELEASE_URL'];
     $urls = array($baseUrl, $releaseUrl);
-    $failed = array();
+    foreach ($vars as $key => $value) {
+        if (preg_match('/TYPO3\_ALIAS\_URL\_[0-9]+/', $key)) {
+            $urls[] = $vars[$key];
+        }
+    }
 
+    $failed = array();
     foreach ($urls as $url) {
-        $responseHeader = get_headers($url, true);
-        $statusCode = $responseHeader[0];
-        if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
-            $failed[] = $url . ': ' . $statusCode;
+        $headers = @get_headers($url, true);
+        if ($headers === false) {
+            $failed[] = $url . ': HTTP request failed';
+        } else {
+            $statusCode = $headers[0];
+            if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
+                $failed[] = $url . ': ' . $statusCode;
+            }
         }
     }
 
     if (empty($failed)) {
         $status = 'Ok';
-        $msg = 'URLs returned valid HTTP response codes: ' . implode(', ', $urls);
+        $msg = 'Valid HTTP response codes: ' . implode(', ', $urls);
     } else {
         $status = 'Error';
-        $msg = 'URLs returned invalid HTTP response codes: ' . implode(', ', $failed);
+        $msg = 'Invalid HTTP response codes: ' . implode(', ', $failed);
     }
 
     set('requirement_rows', [
