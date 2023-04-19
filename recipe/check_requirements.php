@@ -193,13 +193,18 @@ task('check:env_vars', function() {
     ]);
 })->hidden();
 
-desc('Ensure DNS records for TYPO3_BASE_URL and TYPO3_BASE_URL exist');
+desc('Ensure DNS records for TYPO3_BASE_URL, TYPO3_BASE_URL and TYPO3_ALIAS_URL_* exist');
 task('check:domains', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $baseDomain = parse_url($vars['TYPO3_BASE_URL'], PHP_URL_HOST);
     $releaseDomain = parse_url($vars['TYPO3_RELEASE_URL'], PHP_URL_HOST);
-    // todo: parse aliases
     $domains = array($baseDomain, $releaseDomain);
+    foreach ($vars as $key => $value) {
+        if (preg_match('/TYPO3\_ALIAS\_URL\_[0-9]+/', $key)) {
+            $domains[] = parse_url($vars[$key], PHP_URL_HOST);
+        }
+    }
+    
     $unresolved = array();
 
     foreach ($domains as $domain) {
