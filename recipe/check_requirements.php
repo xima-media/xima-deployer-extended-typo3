@@ -207,7 +207,7 @@ task('check:domains', function() {
     
     $unresolved = array();
     foreach ($domains as $domain) {
-        if (checkdnsrr($domain, "A") === false) {
+        if (checkdnsrr($domain, 'A') === false) {
             $unresolved[] = $domain;
         }
     }
@@ -448,23 +448,23 @@ task('check:vhost_base', function() {
         }
         // check if DocumentRoot is configured
         if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-            $errors[] = "DocumentRoot";
+            $errors[] = 'DocumentRoot';
         }
         // check if Directory is configured
         if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-            $errors[] = "<Directory>";
+            $errors[] = '<Directory>';
         }
         // check if .htaccess is enabled
         if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = "AllowOverride All";
+            $errors[] = 'AllowOverride All';
         }
         // check if vHost contains FollowSymLinks
         if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = "FollowSymLinks";
+            $errors[] = 'FollowSymLinks';
         }
         // // check if vHost contains Multiviews
         if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
-            $errors[] = "Multiviews";
+            $errors[] = 'Multiviews';
         }
     }
 
@@ -491,27 +491,27 @@ task('check:vhost_release', function() {
 
     // ensure DocumentRoot is configured
     if (run('grep DocumentRoot "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-        $errors[] = "DocumentRoot";
+        $errors[] = 'DocumentRoot';
     }
     // ensure <Directory> is configured
     if (run('grep "<Directory" "' . $vhost . '" | grep -q "' . $docRoot . '"; echo $?') === '1') {
-        $errors[] = "<Directory>";
+        $errors[] = '<Directory>';
     }
     // ensure .htaccess is enabled
     if (run('grep -q "AllowOverride All" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = "AllowOverride All";
+        $errors[] = 'AllowOverride All';
     }
     // ensure FollowSymLinks is enabled
     if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = "FollowSymLinks";
+        $errors[] = 'FollowSymLinks';
     }
     // ensure Multiviews is enabled
     if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = "Multiviews";
+        $errors[] = 'Multiviews';
     }
     // ensure release variable is set
     if (run('grep -q "SetEnv IS_RELEASE_REQUEST 1" "' . $vhost . '";echo $?') === '1') {
-        $errors[] = "SetEnv IS_RELEASE_REQUEST 1";
+        $errors[] = 'SetEnv IS_RELEASE_REQUEST 1';
     }
 
     if (empty($errors)) {
