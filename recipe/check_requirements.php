@@ -9,7 +9,7 @@ use Xima\XimaDeployerExtendedTypo3\Utility\EnvUtility;
 
 set('requirement_rows', []);
 
-desc('ensure deployment requirements are fulfilled');
+desc('Ensure deployment requirements are fulfilled');
 task('check:requirements', [
     'check:locales',
     'check:user',
