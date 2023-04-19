@@ -420,7 +420,7 @@ EOD;
     }
     
     // clean up
-    run("rm " .$docRoot . $phpFile);
+    run('rm ' .$docRoot . $phpFile);
 
     set('requirement_rows', [
         ...get('requirement_rows'),
