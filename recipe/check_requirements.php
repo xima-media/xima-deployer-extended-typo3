@@ -19,7 +19,7 @@ task('check:requirements', [
     'check:env_vars',
     'check:mysql',
     'check:php_extensions',
-    'check:domains',
+    'check:dns',
     'check:urls',
     'check:vhost_base',
     'check:vhost_release',
@@ -194,7 +194,7 @@ task('check:env_vars', function() {
 })->hidden();
 
 desc('Ensure DNS records for TYPO3_BASE_URL, TYPO3_BASE_URL and TYPO3_ALIAS_URL_* exist');
-task('check:domains', function() {
+task('check:dns', function() {
     $vars = EnvUtility::getRemoteEnvVars();
     $baseDomain = parse_url($vars['TYPO3_BASE_URL'], PHP_URL_HOST);
     $releaseDomain = parse_url($vars['TYPO3_RELEASE_URL'], PHP_URL_HOST);
@@ -222,7 +222,7 @@ task('check:domains', function() {
 
     set('requirement_rows', [
         ...get('requirement_rows'),
-        ['check:domains',$status, $msg],
+        ['check:dns',$status, $msg],
     ]);
 })->hidden();
 
