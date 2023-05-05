@@ -14,9 +14,14 @@ require_once(__DIR__ . '/set.php');
 require_once(__DIR__ . '/recipe/db_init.php');
 require_once(__DIR__ . '/recipe/deploy_check_branch_local.php');
 require_once(__DIR__ . '/recipe/deploy_upload_code.php');
+require_once(__DIR__ . '/recipe/deploy_writable_local_configuration.php');
 require_once(__DIR__ . '/recipe/logs_php.php');
 require_once(__DIR__ . '/recipe/sequelace.php');
 
 // prevent pipeline fail on first deploy (no tables)
 // + enable database copy in feature branch deployment
 before('db:truncate', 'db:init');
+
+// make LocalConfiguration.php from git writable
+// don't use deploy:update_code since it could be disabled in non-git deployment
+after('deploy:shared', 'deploy:writableLocalConfiguration');
