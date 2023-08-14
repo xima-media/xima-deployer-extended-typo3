@@ -5,7 +5,9 @@ namespace Deployer;
 task('deploy:upload_code', function () {
     // upload files/folders
     foreach (get('upload_paths') as $path) {
-        upload($path, '{{release_path}}/', ['options' => ['-R']]);
+        if (test('[ -f ' . $path . ' ]') || test('[ -d ' . $path . ' ]')) {
+            upload($path, '{{release_path}}/', ['options' => ['-R']]);
+        }
     }
 
     // fix permissions
