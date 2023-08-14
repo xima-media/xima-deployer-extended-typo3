@@ -5,7 +5,7 @@ namespace Deployer;
 task('deploy:upload_code', function () {
     // upload files/folders
     foreach (get('upload_paths') as $path) {
-        if (test('[ -f ' . $path . ' ]') || test('[ -d ' . $path . ' ]')) {
+        if (testLocally('[ -f ' . $path . ' ]') || testLocally('[ -d ' . $path . ' ]')) {
             upload($path, '{{release_path}}/', ['options' => ['-R']]);
         }
     }
