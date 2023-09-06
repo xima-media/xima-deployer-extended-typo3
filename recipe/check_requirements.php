@@ -348,8 +348,7 @@ task('check:php_extensions', function() {
         'zlib',
         'openssl',
         'pdo_mysql',
-        'apcu',
-        'mailparse'
+        'apcu'
     ];
     $available = run('php -m');
 
