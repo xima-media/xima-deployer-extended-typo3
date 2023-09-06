@@ -12,6 +12,7 @@ set('requirement_rows', []);
 desc('Ensure deployment requirements are fulfilled');
 task('check:requirements', [
     'check:locales',
+    'check:software',
     'check:user',
     'check:dir',
     'check:env',
@@ -47,6 +48,25 @@ task('check:locales', function () {
             continue;
         }
         $results[] = ['check:locales', 'Error', 'Locale missing: ' . $locale];
+    }
+
+    set('requirement_rows', [
+        ...get('requirement_rows'),
+        ...$results
+    ]);
+})->hidden();
+
+desc('Ensure required software is present');
+task('check:software', function () {
+    $tools = ['patch', 'git', 'gm', 'exiftool', 'ghostscript', 'pdftotext', 'pdfinfo', 'catdoc', 'catppt', 'xls2csv'];
+    $results = [];
+
+    foreach ($tools as $tool) {
+        if (run('which ' . $tool)) {
+            $results[] = ['check:software', 'Ok', 'Software installed: ' . $tool];
+            continue;
+        }
+        $results[] = ['check:software', 'Error', 'Software missing: ' . $tool];
     }
 
     set('requirement_rows', [
