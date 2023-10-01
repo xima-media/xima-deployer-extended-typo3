@@ -65,4 +65,7 @@ set('upload_paths', [
     'config',
     'packages',
     'public/.htaccess',
+    'public/typo3conf/LocalConfiguration.php',
+    'public/typo3conf/AdditionalConfiguration.php',
+    'var/labels',
 ]);
