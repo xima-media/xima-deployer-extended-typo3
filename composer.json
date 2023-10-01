@@ -11,7 +11,7 @@
     }
   ],
   "require": {
-    "sourcebroker/deployer-extended-typo3": "20.0.0 || dev-master",
+    "sourcebroker/deployer-extended-typo3": "21.0.0",
     "spooner/deployer-information": "1.4.0"
   },
   "autoload": {
