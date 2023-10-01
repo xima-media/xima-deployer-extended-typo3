@@ -30,10 +30,10 @@ task('check:requirements', [
 
 task('check:summary', function () {
     (new Table(output()))
-       ->setHeaderTitle(currentHost()->getAlias())
-       ->setHeaders(['Task', 'Status', 'Info'])
-       ->setRows(get('requirement_rows'))
-       ->render();
+        ->setHeaderTitle(currentHost()->getAlias())
+        ->setHeaders(['Task', 'Status', 'Info'])
+        ->setRows(get('requirement_rows'))
+        ->render();
 })->hidden();
 
 desc('Ensure system locales are present');
@@ -88,7 +88,7 @@ task('check:user', function () {
     $results[] = ['check:user', 'Ok', 'SSH user matches deployer remote_user ' . $remoteUser];
 
     if ($primaryUserGroup !== 'www-data') {
-        $results[] = ['check:user', 'Error', 'Primary user group (' . $primaryUserGroup .') must be www-data'];
+        $results[] = ['check:user', 'Error', 'Primary user group (' . $primaryUserGroup . ') must be www-data'];
     }
     $results[] = ['check:user', 'Ok', 'Primary user group is ' . $primaryUserGroup];
 
@@ -102,7 +102,7 @@ desc('Ensure application directory exists with correct permissions');
 task('check:dir', function () {
     $results = [];
     if (!test('[ -d {{deploy_path}} ]')) {
-        $results[] = [ 'check:dir', 'Error', 'deploy_path {{deploy_path}} does not exist'];
+        $results[] = ['check:dir', 'Error', 'deploy_path {{deploy_path}} does not exist'];
     } else {
         $remoteUser = get('remote_user');
         $owner = run('stat -c "%U" ' . get('deploy_path'));
@@ -113,7 +113,7 @@ task('check:dir', function () {
             $results[] = ['check:dir', 'Error', $remoteUser . ' is not owner of ' . get('deploy_path')];
         }
         $results[] = ['check:dir', 'Ok', $remoteUser . ' is owner of ' . get('deploy_path')];
-        
+
         if ($group !== 'www-data') {
             $results[] = ['check:dir', 'Error', 'www-data is not group of ' . get('deploy_path')];
         }
@@ -132,10 +132,10 @@ task('check:dir', function () {
 })->hidden();
 
 desc('Ensure .env exists with correct permissions');
-task('check:env', function() {
+task('check:env', function () {
     $results = [];
     if (!test('[ -f {{deploy_path}}/shared/.env ]')) {
-        $results[] = ['check:env','Error', 'Environment file {{deploy_path}}/shared/.env does not exist'];
+        $results[] = ['check:env', 'Error', 'Environment file {{deploy_path}}/shared/.env does not exist'];
     } else {
         $env = get('deploy_path') . '/shared/.env';
         $remoteUser = get('remote_user');
@@ -147,7 +147,7 @@ task('check:env', function() {
             $results[] = ['check:env', 'Error', $remoteUser . ' is not owner of ' . $env];
         }
         $results[] = ['check:env', 'Ok', $remoteUser . ' is owner of ' . $env];
-        
+
         if ($group !== 'www-data') {
             $results[] = ['check:env', 'Error', 'www-data is not group of ' . $env];
         }
@@ -166,15 +166,15 @@ task('check:env', function() {
 })->hidden();
 
 desc('Ensure INSTANCE in .env matches deployer hostname');
-task('check:env_instance', function() {
+task('check:env_instance', function () {
     $results = [];
     $currentHostname = currentHost()->get('alias');
     $instance = EnvUtility::getRemoteEnvVars()['INSTANCE'] ?? '';
 
     if ($currentHostname === $instance) {
-        $results[] = ['check:env_instance','Ok', 'Deployer hostname (' . $currentHostname . ') matches INSTANCE (' . $instance . ')'];
+        $results[] = ['check:env_instance', 'Ok', 'Deployer hostname (' . $currentHostname . ') matches INSTANCE (' . $instance . ')'];
     } else {
-        $results[] = ['check:env_instance','Error', 'Deployer hostname (' . $currentHostname . ') does not match INSTANCE (' . $instance . ')'];
+        $results[] = ['check:env_instance', 'Error', 'Deployer hostname (' . $currentHostname . ') does not match INSTANCE (' . $instance . ')'];
     }
 
     set('requirement_rows', [
@@ -184,7 +184,7 @@ task('check:env_instance', function() {
 })->hidden();
 
 desc('Ensure mandatory variables in .env are present');
-task('check:env_vars', function() {
+task('check:env_vars', function () {
     $results = [];
     $vars = EnvUtility::getRemoteEnvVars();
     $variables = [
@@ -196,16 +196,16 @@ task('check:env_vars', function() {
         'TYPO3_CONF_VARS__DB__Connections__Default__port',
         'TYPO3_CONF_VARS__DB__Connections__Default__user'
     ];
-    
+
     foreach ($variables as $variable) {
         if (!array_key_exists($variable, $vars)) {
-            $results[] = ['check:env_vars','Error', 'Missing variable: ' . $variable];
+            $results[] = ['check:env_vars', 'Error', 'Missing variable: ' . $variable];
             continue;
         }
-        if (test('[ -z ' . $vars[$variable] .' ]')) {
-            $results[] = ['check:env_vars','Error', 'Empty variable: ' . $variable];
+        if (test('[ -z ' . $vars[$variable] . ' ]')) {
+            $results[] = ['check:env_vars', 'Error', 'Empty variable: ' . $variable];
         }
-        $results[] = ['check:env_vars','Ok', 'Variable is set: ' . $variable];
+        $results[] = ['check:env_vars', 'Ok', 'Variable is set: ' . $variable];
     }
 
     set('requirement_rows', [
@@ -215,7 +215,7 @@ task('check:env_vars', function() {
 })->hidden();
 
 desc('Ensure DNS records for TYPO3_BASE_URL, TYPO3_BASE_URL and TYPO3_ALIAS_URL_* exist');
-task('check:dns', function() {
+task('check:dns', function () {
     $results = [];
     $vars = EnvUtility::getRemoteEnvVars();
     $urls = [
@@ -232,16 +232,16 @@ task('check:dns', function() {
     foreach ($urls as $url) {
         $host = @parse_url($url, PHP_URL_HOST);
         if (!$host) {
-            $results[] = [ 'check:dns', 'Error', 'URL malformed or missing ' . $url ];
+            $results[] = ['check:dns', 'Error', 'URL malformed or missing ' . $url];
             continue;
         }
         if (!checkdnsrr($host, 'A')) {
-            $results[] = [ 'check:dns', 'Error', 'A record not found: ' . $host ];
+            $results[] = ['check:dns', 'Error', 'A record not found: ' . $host];
             continue;
         }
-        $results[] = [ 'check:dns', 'Ok', 'A record found: ' . $host ];
+        $results[] = ['check:dns', 'Ok', 'A record found: ' . $host];
     }
-    
+
     set('requirement_rows', [
         ...get('requirement_rows'),
         ...$results
@@ -249,7 +249,7 @@ task('check:dns', function() {
 })->hidden();
 
 desc('Ensure TYPO3_BASE_URL, TYPO3_BASE_URL and TYPO3_ALIAS_URL_* are reachable with HTTP code 200 or 404');
-task('check:urls', function() {
+task('check:urls', function () {
     $results = [];
     $vars = EnvUtility::getRemoteEnvVars();
     $urls = [
@@ -265,21 +265,20 @@ task('check:urls', function() {
     array_filter($urls);
     foreach ($urls as $url) {
         if (!parse_url($url, PHP_URL_HOST)) {
-            $results[] = ['check:urls','Error', 'URL malformed or missing' . $url];
+            $results[] = ['check:urls', 'Error', 'URL malformed or missing' . $url];
             continue;
         }
         $headers = @get_headers($url, true);
         if (!$headers) {
-            $results[] = ['check:urls','Error', 'HTTP request failed:' . $url];
+            $results[] = ['check:urls', 'Error', 'HTTP request failed:' . $url];
             continue;
         }
         $statusCode = $headers[0];
         if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
-            $results[] = ['check:urls','Error', 'Invalid HTTP response ' . $statusCode . ': ' . $url];
+            $results[] = ['check:urls', 'Error', 'Invalid HTTP response ' . $statusCode . ': ' . $url];
             continue;
         }
-        $results[] = ['check:urls','Ok', 'Valid HTTP response ' . $statusCode . ': ' . $url];
-
+        $results[] = ['check:urls', 'Ok', 'Valid HTTP response ' . $statusCode . ': ' . $url];
     }
     set('requirement_rows', [
         ...get('requirement_rows'),
@@ -288,7 +287,7 @@ task('check:urls', function() {
 })->hidden();
 
 desc('Ensure database can be accessed');
-task('check:mysql', function() {
+task('check:mysql', function () {
     $results = [];
     $vars = EnvUtility::getRemoteEnvVars();
     $dbname = $vars['TYPO3_CONF_VARS__DB__Connections__Default__dbname'] ?? '';
@@ -297,7 +296,7 @@ task('check:mysql', function() {
     $user = $vars['TYPO3_CONF_VARS__DB__Connections__Default__user'] ?? '';
     $password = $vars['TYPO3_CONF_VARS__DB__Connections__Default__password'] ?? '';
 
-    if (in_array('', [$dbname, $host, $port, $user, $password ])) {
+    if (in_array('', [$dbname, $host, $port, $user, $password])) {
         $results[] = ['check:mysql', 'Error', 'Undefined database variable'];
         set('requirement_rows', [
             ...get('requirement_rows'),
@@ -308,9 +307,9 @@ task('check:mysql', function() {
 
     if ($vars['TYPO3_CONF_VARS__DB__Connections__Default__driverOptions__flags'] ?? '' === '2048') {
         // if ssl is needed
-        $query = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' --ssl ' . $dbname . ' > /dev/null 2>&1; echo $?');
+        $query = run('mysqlshow --host=' . $host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' --ssl ' . $dbname . ' > /dev/null 2>&1; echo $?');
     } else {
-        $query = run('mysqlshow --host=' .$host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' ' . $dbname . ' > /dev/null 2>&1; echo $?');
+        $query = run('mysqlshow --host=' . $host . ' --port=' . $port . ' --user=' . $user . ' --password=' . $password . ' ' . $dbname . ' > /dev/null 2>&1; echo $?');
     }
 
     if ($query === '0') {
@@ -328,7 +327,7 @@ task('check:mysql', function() {
 })->hidden();
 
 desc('Ensure always mandatory php extensions are present');
-task('check:php_extensions', function() {
+task('check:php_extensions', function () {
     $results = [];
     $required = [
         'pdo',
@@ -354,11 +353,10 @@ task('check:php_extensions', function() {
 
     foreach ($required as $extension) {
         if (!stripos($available, $extension)) {
-            $results[] = ['check:php_extensions','Error', 'Missing extension: ' . $extension];
+            $results[] = ['check:php_extensions', 'Error', 'Missing extension: ' . $extension];
             continue;
         }
-        $results[] = ['check:php_extensions','Ok', 'Extension is present: ' . $extension];
-
+        $results[] = ['check:php_extensions', 'Ok', 'Extension is present: ' . $extension];
     }
 
     set('requirement_rows', [
@@ -368,11 +366,11 @@ task('check:php_extensions', function() {
 })->hidden();
 
 desc('Ensure Apache runs PHP with required settings');
-task('check:php_settings', function() {
+task('check:php_settings', function () {
     $results = [];
     $baseUrl = EnvUtility::getRemoteEnvVars()['TYPO3_BASE_URL'] ?? '';
     if (!parse_url($baseUrl, PHP_URL_HOST)) {
-        $results[] = ['check:php_settings','Error', 'TYPO3_BASE_URL is undefined or missing'];
+        $results[] = ['check:php_settings', 'Error', 'TYPO3_BASE_URL is undefined or missing'];
         set('requirement_rows', [
             ...get('requirement_rows'),
             ...$results
@@ -382,7 +380,7 @@ task('check:php_settings', function() {
     $headers = @get_headers($baseUrl, true);
     $statusCode = $headers[0];
     if ($statusCode !== 'HTTP/1.1 200 OK' && $statusCode !== 'HTTP/1.1 404 Not Found') {
-        $results[] = ['check:php_settings','Error', 'Invalid HTTP response ' . $statusCode . ': ' . $url];
+        $results[] = ['check:php_settings', 'Error', 'Invalid HTTP response ' . $statusCode . ': ' . $baseUrl];
         set('requirement_rows', [
             ...get('requirement_rows'),
             ...$results
@@ -418,7 +416,7 @@ EOD;
     run('echo "' . $configToJson . '" > ' . $docRoot . $phpFile);
     $json = run('wget ' . $baseUrl . '/' . $phpFile . ' -q -O - || echo "1"');
     // clean up php file
-    run('rm ' .$docRoot . $phpFile);
+    run('rm ' . $docRoot . $phpFile);
     // remove docRoot if it was created by this task
     if (!$docRootExists) {
         run('rmdir ' . get('deploy_path') . '/current/public');
@@ -427,7 +425,7 @@ EOD;
 
     // validate json
     if ($json === '1') {
-        $results[] = ['check:php_settings','Error', 'Could not read php settings, vHost may be misconfigured'];
+        $results[] = ['check:php_settings', 'Error', 'Could not read php settings, vHost may be misconfigured'];
         set('requirement_rows', [
             ...get('requirement_rows'),
             ...$results
@@ -436,7 +434,7 @@ EOD;
     }
     $config = @json_decode($json, true);
     if (is_null($config)) {
-        $results[] = ['check:php_settings','Error', 'Unable to parse json'];
+        $results[] = ['check:php_settings', 'Error', 'Unable to parse json'];
         set('requirement_rows', [
             ...get('requirement_rows'),
             ...$results
@@ -444,54 +442,62 @@ EOD;
         return;
     }
 
-    function return_bytes ($size_str) {
-        switch (substr ($size_str, -1)) {
-            case 'M': case 'm': return (int)$size_str * 1048576;
-            case 'K': case 'k': return (int)$size_str * 1024;
-            case 'G': case 'g': return (int)$size_str * 1073741824;
-            default: return $size_str;
+    function return_bytes($size_str)
+    {
+        switch (substr($size_str, -1)) {
+            case 'M':
+            case 'm':
+                return (int)$size_str * 1048576;
+            case 'K':
+            case 'k':
+                return (int)$size_str * 1024;
+            case 'G':
+            case 'g':
+                return (int)$size_str * 1073741824;
+            default:
+                return $size_str;
         }
     }
-    
+
     if ($config['php_sapi_name'] !== 'fpm-fcgi') {
-        $results[] = ['check:php_settings', 'Error' ,'PHP-FPM not enabled (' . $config['php_sapi_name'] . ')'];
+        $results[] = ['check:php_settings', 'Error', 'PHP-FPM not enabled (' . $config['php_sapi_name'] . ')'];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'PHP-FPM is enabled (' . $config['php_sapi_name'] . ')'];
+        $results[] = ['check:php_settings', 'Ok', 'PHP-FPM is enabled (' . $config['php_sapi_name'] . ')'];
     }
     if ($config['default_timezone'] !== 'Europe/Berlin') {
-        $results[] = ['check:php_settings', 'Error' ,'Default timezone is ' . $config['default_timezone']];
+        $results[] = ['check:php_settings', 'Error', 'Default timezone is ' . $config['default_timezone']];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'Default timezone is ' . $config['default_timezone']];
+        $results[] = ['check:php_settings', 'Ok', 'Default timezone is ' . $config['default_timezone']];
     }
     if (intval(return_bytes($config['memory_limit'])) < 536870912) {
-        $results[] = ['check:php_settings', 'Error' ,'memory_limit ' . $config['memory_limit'] . ' is less than 512M'];
+        $results[] = ['check:php_settings', 'Error', 'memory_limit ' . $config['memory_limit'] . ' is less than 512M'];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'memory_limit = ' . $config['memory_limit']];
+        $results[] = ['check:php_settings', 'Ok', 'memory_limit = ' . $config['memory_limit']];
     }
-    if (intval($config['max_execution_time']) < 240 ) {
-        $results[] = ['check:php_settings', 'Error' ,'max_execution_time ' . $config['max_execution_time'] . ' is lower than 240s'];
+    if (intval($config['max_execution_time']) < 240) {
+        $results[] = ['check:php_settings', 'Error', 'max_execution_time ' . $config['max_execution_time'] . ' is lower than 240s'];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'max_execution_time = ' . $config['max_execution_time']];
+        $results[] = ['check:php_settings', 'Ok', 'max_execution_time = ' . $config['max_execution_time']];
     }
-    if (intval($config['max_input_vars']) < 1500 ) {
-        $results[] = ['check:php_settings', 'Error' ,'max_input_vars ' . $config['max_input_vars'] . ' is lower than 1500'];
+    if (intval($config['max_input_vars']) < 1500) {
+        $results[] = ['check:php_settings', 'Error', 'max_input_vars ' . $config['max_input_vars'] . ' is lower than 1500'];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'max_input_vars = ' . $config['max_input_vars']];
+        $results[] = ['check:php_settings', 'Ok', 'max_input_vars = ' . $config['max_input_vars']];
     }
     if (intval(return_bytes($config['post_max_size'])) < 22020096) {
-        $results[] = ['check:php_settings', 'Error' ,'post_max_size ' . $config['post_max_size'] . ' is less than 21M'];
+        $results[] = ['check:php_settings', 'Error', 'post_max_size ' . $config['post_max_size'] . ' is less than 21M'];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'post_max_size = ' . $config['post_max_size']];
+        $results[] = ['check:php_settings', 'Ok', 'post_max_size = ' . $config['post_max_size']];
     }
     if (intval(return_bytes($config['upload_max_filesize'])) < 20971520) {
-        $results[] = ['check:php_settings', 'Error' ,'upload_max_filesize ' . $config['upload_max_filesize'] . ' is less than 20M'];
+        $results[] = ['check:php_settings', 'Error', 'upload_max_filesize ' . $config['upload_max_filesize'] . ' is less than 20M'];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'upload_max_filesize = ' . $config['upload_max_filesize']];
+        $results[] = ['check:php_settings', 'Ok', 'upload_max_filesize = ' . $config['upload_max_filesize']];
     }
-    if ($config['opcache.enable'] !== '1' ) {
-        $results[] = ['check:php_settings', 'Error' ,'Opcache is disabled'];
+    if ($config['opcache.enable'] !== '1') {
+        $results[] = ['check:php_settings', 'Error', 'Opcache is disabled'];
     } else {
-        $results[] = ['check:php_settings', 'Ok' ,'Opcache is enabled'];
+        $results[] = ['check:php_settings', 'Ok', 'Opcache is enabled'];
     }
 
     set('requirement_rows', [
@@ -501,7 +507,7 @@ EOD;
 })->hidden();
 
 desc('Ensure apache virtualhost for TYPO3_BASE_URL and TYPO3_ALIAS_URL_* matches requirements');
-task('check:vhost_base', function() {
+task('check:vhost_base', function () {
     $results = [];
     $docRoot = get('deploy_path') . '/current/public';
     $vars = EnvUtility::getRemoteEnvVars();
@@ -544,7 +550,6 @@ task('check:vhost_base', function() {
             $results[] = ['check:vhost_base', 'Error', 'Alias missing: ' . $host];
         }
         $results[] = ['check:vhost_base', 'Ok', 'Alias configured: ' . $host];
-
     }
 
     // ensure DocumentRoot is configured
@@ -564,13 +569,13 @@ task('check:vhost_base', function() {
         $results[] = ['check:vhost_base', 'Error', 'AllowOverride All missing'];
     }
     $results[] = ['check:vhost_base', 'Ok', 'AllowOverride All configured'];
-    
+
     // ensure FollowSymLinks is enabled
     if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
         $results[] = ['check:vhost_base', 'Error', 'FollowSymLinks missing'];
     }
     $results[] = ['check:vhost_base', 'Ok', 'FollowSymLinks configured'];
-    
+
     // ensure Multiviews is enabled
     if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
         $results[] = ['check:vhost_base', 'Error', 'Multiviews missing'];
@@ -584,7 +589,7 @@ task('check:vhost_base', function() {
 })->hidden();
 
 desc('Ensure apache virtualhost for TYPO3_RELEASE_URL matches requirements');
-task('check:vhost_release', function() {
+task('check:vhost_release', function () {
     $results = [];
     $docRoot = get('deploy_path') . '/release/public';
     $vars = EnvUtility::getRemoteEnvVars();
@@ -627,13 +632,13 @@ task('check:vhost_release', function() {
         $results[] = ['check:vhost_release', 'Error', 'AllowOverride All missing'];
     }
     $results[] = ['check:vhost_release', 'Ok', 'AllowOverride All configured'];
-    
+
     // ensure FollowSymLinks is enabled
     if (run('grep -Eq "+FollowSymLinks|FollowSymLinks" "' . $vhost . '";echo $?') === '1') {
         $results[] = ['check:vhost_release', 'Error', 'FollowSymLinks missing'];
     }
     $results[] = ['check:vhost_release', 'Ok', 'FollowSymLinks configured'];
-    
+
     // ensure Multiviews is enabled
     if (run('grep -Eq "+Multiviews|Multiviews" "' . $vhost . '";echo $?') === '1') {
         $results[] = ['check:vhost_release', 'Error', 'Multiviews missing'];
@@ -643,7 +648,6 @@ task('check:vhost_release', function() {
     // ensure release variable is set
     if (run('grep -q "SetEnv IS_RELEASE_REQUEST 1" "' . $vhost . '";echo $?') === '1') {
         $results[] = ['check:vhost_release', 'Error', '"SetEnv IS_RELEASE_REQUEST 1" missing'];
-
     }
     $results[] = ['check:vhost_release', 'Ok', '"SetEnv IS_RELEASE_REQUEST 1" is present'];
 
