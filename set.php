@@ -57,6 +57,9 @@ set('media_rsync_flags', '-rz --perms');
 // disable composer version check
 set('composer_channel_autoupdate', false);
 
+// disable plattform requirement check (fails in pipeline)
+set('check_composer_install_options', '--verbose --prefer-dist --no-progress --no-interaction --optimize-autoloader --ignore-platform-reqs');
+
 // files to upload in non-git deployment
 set('upload_paths', [
     'composer.json',
