@@ -3,5 +3,5 @@
 namespace Deployer;
 
 task('logs:php-fpm', function () {
-    run('tail -f /var/log/php*.log');
+    run('tail -F /var/log/php*.log');
 })->verbose();
