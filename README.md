@@ -75,7 +75,10 @@ set('shared_dirs', [
 ## New useful commands
 
 * dep log:app
-* dep log:php
+* dep log:phpfpm
+	* dep log:phpfpm_slow
+	* dep log:phpfpm_access
+	* dep log:phpfpm_error
 * dep sequelace
 
 ## Non-git deployment
