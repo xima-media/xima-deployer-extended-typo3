@@ -67,6 +67,7 @@ set('upload_paths', [
     'deploy.php',
     'config',
     'packages',
+    'patches',
     'public/.htaccess',
     'public/typo3conf/LocalConfiguration.php',
     'public/typo3conf/AdditionalConfiguration.php',
