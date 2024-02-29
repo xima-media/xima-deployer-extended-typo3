@@ -52,7 +52,10 @@ set('log_files', 'var/log/*.log');
 set('fetch_method', 'curl');
 
 // keep permissions from source system
-set('media_rsync_flags', '-rz --perms');
+set('media_custom', [
+    'flags' => 'rzp',
+    ],
+);
 
 // disable composer version check
 set('composer_channel_autoupdate', false);
