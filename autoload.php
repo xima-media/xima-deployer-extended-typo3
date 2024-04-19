@@ -15,6 +15,7 @@ require_once(__DIR__ . '/recipe/db_init.php');
 require_once(__DIR__ . '/recipe/deploy_check_branch_local.php');
 require_once(__DIR__ . '/recipe/deploy_upload_code.php');
 require_once(__DIR__ . '/recipe/deploy_writable_local_configuration.php');
+require_once(__DIR__ . '/recipe/launch.php');
 require_once(__DIR__ . '/recipe/logs_php.php');
 require_once(__DIR__ . '/recipe/check_requirements.php');
 require_once(__DIR__ . '/recipe/sequelace.php');

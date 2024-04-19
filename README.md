@@ -74,6 +74,7 @@ set('shared_dirs', [
 
 ## New useful commands
 
+* dep launch
 * dep log:app
 * dep log:phpfpm
 	* dep log:phpfpm-slow
