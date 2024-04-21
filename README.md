@@ -92,3 +92,41 @@ after('deploy:update_code', 'deploy:upload_code');
 ```
 
 The files to upload become configured via [`upload_paths`](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/set.php#L61).
+
+## Reset from Gitlab Artifact
+
+If Host A needs current data from Host B without direct access, Gitlab artifacts may be used as an intermediary.
+
+Prerequisites:
+- Gitlab API token with download access
+- Artifact download url in *deploy.php* of Host A:
+```php
+set('reset_gitlab_artifact_url', 'https://<domain>/api/v4/projects/<project-id>/jobs/artifacts/<branch>/download?job=export-job');
+```
+
+1. Host B: Exports database and media files, which will then be uploaded as artifact.
+```yaml
+export-job:
+  ...
+  script:
+    - vendor/bin/dep db:export --options=dumpcode:myArtifact --no-interaction -vvv host-b
+    - vendor/bin/dep db:process --options=dumpcode:myArtifact --no-interaction -vvv host-b
+    - vendor/bin/dep db:compress --options=dumpcode:myArtifact --no-interaction -vvv host-b
+    - vendor/bin/dep db:download --options=dumpcode:myArtifact --no-interaction -vvv host-b
+    - vendor/bin/dep media:pull --no-interaction host-b
+  artifacts:
+    paths:
+      - .dep/database
+      - public/fileadmin
+      - public/uploads
+    expire_in: 1 day
+```
+2. Host A: Uses task **reset:from_gitlab_artifact** to download and import the artifact.
+```yaml
+...
+import-job:
+  ...
+  script:
+    - vendor/bin/dep reset:from_gitlab_artifact -o gitlab_api_token=$CI_VARIABLE_WITH_API_TOKEN -o dumpcode=myArtifact host-a
+  when: manual
+```
