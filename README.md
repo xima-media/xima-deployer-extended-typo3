@@ -127,6 +127,6 @@ export-job:
 import-job:
   ...
   script:
-    - vendor/bin/dep reset:from_gitlab_artifact -o gitlab_api_token=$CI_VARIABLE_WITH_API_TOKEN -o dumpcode=myArtifact host-a
+    - vendor/bin/dep reset:from_gitlab_artifact --options="token:$CI_VARIABLE_WITH_API_TOKEN,dumpcode:myArtifact" host-a
   when: manual
 ```
