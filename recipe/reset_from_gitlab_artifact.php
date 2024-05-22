@@ -1,8 +1,9 @@
 <?php
 
 namespace Deployer;
-use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
+
 use Deployer\Exception\GracefulShutdownException;
+use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
 
 task('reset:from_gitlab_artifact', function () {
     // set in deploy.php as https://gitlab.example.org/api/v4/projects/<project-id>/jobs/artifacts/<branch>/download?job=<job-of-artifact>
@@ -32,5 +33,5 @@ task('reset:from_gitlab_artifact', function () {
     } else {
         $verbosity = (new ConsoleUtility())->getVerbosityAsParameter();
         run('cd {{release_or_current_path}} && {{bin/php}} {{bin/deployer}} reset:from_gitlab_artifact ' . $verbosity . ' --options="token:' . $gitlabApiToken . ',dumpcode:' . $dumpCode . '" {{argument_host}}');
-    };
+    }
 });
