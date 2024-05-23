@@ -15,7 +15,6 @@ task('reset:from_gitlab_artifact', function () {
 
     if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#jobs\/artifacts\/.+\/download$#', parse_url($url, PHP_URL_PATH))) {
         throw new GracefulShutdownException('Gitlab API URL is invalid: "' . $url . '"');
-        return;
     }
     if (get('is_argument_host_the_same_as_local_host')) {
         $activeDir = get('deploy_path') . (testLocally('[ -e {{deploy_path}}/release ]') ? '/release' : '/current');
