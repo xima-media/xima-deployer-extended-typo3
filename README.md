@@ -104,7 +104,8 @@ Prerequisites:
 set('reset_gitlab_artifact_url', 'https://<domain>/api/v4/projects/<project-id>/jobs/artifacts/<branch>/download?job=export-job');
 ```
 
-1. Host B: Exports database and media files, which will then be uploaded as artifact.
+### 1. Host B: Exports database and media files, which will then be uploaded as artifact.
+
 ```yaml
 export-job:
   ...
@@ -121,7 +122,8 @@ export-job:
       - public/uploads
     expire_in: 1 day
 ```
-2. Host A: Uses task **reset:from_gitlab_artifact** to download and import the artifact.
+### 2. Host A: Uses task **reset:from_gitlab_artifact** to download and import the artifact.
+
 ```yaml
 ...
 import-job:
