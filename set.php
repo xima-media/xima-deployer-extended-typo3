@@ -45,6 +45,12 @@ set('shared_dirs', function () {
     ];
 });
 
+// add additional shared files
+set('shared_files', [
+    ...get('shared_files'),
+    '.env.local',
+]);
+
 // set log files dir
 set('log_files', 'var/log/*.log');
 
