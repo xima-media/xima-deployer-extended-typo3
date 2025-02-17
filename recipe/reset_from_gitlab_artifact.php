@@ -4,7 +4,7 @@ namespace Deployer;
 
 use Deployer\Exception\GracefulShutdownException;
 use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
-use SourceBroker\DeployerExtendedDatabase\Utility\OptionUtility;
+use Xima\XimaDeployerExtendedTypo3\Utility\OptionUtility;
 
 task('reset:from_gitlab_artifact', function () {
     // set in deploy.php as https://gitlab.example.org/api/v4/projects/<project-id>/jobs/artifacts/<branch>/download?job=<job-of-artifact>

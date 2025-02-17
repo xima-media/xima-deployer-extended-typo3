@@ -2,7 +2,7 @@
 
 namespace Deployer;
 
-use SourceBroker\DeployerExtendedDatabase\Utility\OptionUtility;
+use Xima\XimaDeployerExtendedTypo3\Utility\OptionUtility;
 
 /**
  * Check for missing database: Run database updateschema + import database of base branch
