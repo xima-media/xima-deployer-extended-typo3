@@ -2,13 +2,14 @@
 
 namespace Deployer;
 
-use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
+use SourceBroker\DeployerExtendedDatabase\Utility\OptionUtility;
 
 /**
  * Check for missing database: Run database updateschema + import database of base branch
  */
 task('db:init', function () {
-    $baseBranch = (new ConsoleUtility())->getOption('base_branch') ?: '';
+    $optionUtility = new OptionUtility(input()->getOption('options'));
+    $baseBranch = $optionUtility->getOption('base_branch');
 
     // abort if feature branch has already been configured
     if (!$baseBranch || !get('argument_host')) {

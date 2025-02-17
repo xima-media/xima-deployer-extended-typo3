@@ -4,14 +4,16 @@ namespace Deployer;
 
 use Deployer\Exception\GracefulShutdownException;
 use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
+use SourceBroker\DeployerExtendedDatabase\Utility\OptionUtility;
 
 task('reset:from_gitlab_artifact', function () {
     // set in deploy.php as https://gitlab.example.org/api/v4/projects/<project-id>/jobs/artifacts/<branch>/download?job=<job-of-artifact>
     $url = get('reset_gitlab_artifact_url');
     // Gitlab API token for the repository where the artifact is stored. Can be a project token.
-    $gitlabApiToken = (new ConsoleUtility())->getOption('token', true);
+    $optionUtility = new OptionUtility(input()->getOption('options'));
+    $gitlabApiToken = $optionUtility->getOption('token', true);
     // Database dumpcode that was used during the creation of the Gitlab artifact.
-    $dumpCode = (new ConsoleUtility())->getOption('dumpcode', true);
+    $dumpCode = $optionUtility->getOption('dumpcode', true);
 
     if (!filter_var($url, FILTER_VALIDATE_URL) || !preg_match('#jobs\/artifacts\/.+\/download$#', parse_url($url, PHP_URL_PATH))) {
         throw new GracefulShutdownException('Gitlab API URL is invalid: "' . $url . '"');
