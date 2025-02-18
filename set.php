@@ -5,6 +5,9 @@ namespace Deployer;
 // webserver user
 set('http_user', 'www-data');
 
+// default php binary
+set('bin/php', 'php');
+
 // remote permissions
 set('writable_mode', 'chmod');
 set('writable_chmod_recursive', false);
