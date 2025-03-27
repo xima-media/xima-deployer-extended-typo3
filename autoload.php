@@ -21,6 +21,8 @@ require_once(__DIR__ . '/recipe/logs_php.php');
 require_once(__DIR__ . '/recipe/check_requirements.php');
 require_once(__DIR__ . '/recipe/sequelace.php');
 require_once(__DIR__ . '/recipe/reset_from_gitlab_artifact.php');
+require_once(__DIR__ . '/recipe/media_push.php');
+
 
 // prevent pipeline fail on first deploy (no tables)
 // + enable database copy in feature branch deployment

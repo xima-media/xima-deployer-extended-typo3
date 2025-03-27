@@ -132,3 +132,15 @@ import-job:
     - vendor/bin/dep reset:from_gitlab_artifact --options="token:$CI_VARIABLE_WITH_API_TOKEN,dumpcode:myArtifact" host-a
   when: manual
 ```
+
+## Patch for media:push task
+
+The flag `--keep-dirlinks (-K)` is broken in recent rsync versions - this causes media:push from https://github.com/sourcebroker/deployer-extended-media to fail when syncing into symlinked directories: https://github.com/sourcebroker/deployer-extended-media/issues/9
+
+To patch this, the absolute path to the shared dir is used:
+```php
+# 37 $src = get('deploy_path') . '/' . (test('[ -L {{deploy_path}}/release ]') ? 'release' : 'current');
+$src = get('deploy_path') . '/' . 'shared';
+```
+
+Warning: All synchronised directories in **media_custom** must be **shared_dirs**.
