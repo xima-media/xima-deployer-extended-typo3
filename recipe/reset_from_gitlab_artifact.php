@@ -21,7 +21,7 @@ task('reset:from_gitlab_artifact', function () {
     if (get('is_argument_host_the_same_as_local_host')) {
         $activeDir = get('deploy_path') . (testLocally('[ -e {{deploy_path}}/release ]') ? '/release' : '/current');
         $activeDir = testLocally('[ -e ' . $activeDir . ' ]') ? $activeDir : get('deploy_path');
-        runLocally('cd ' . $activeDir . ' && curl --location --output artifacts.zip --header "PRIVATE-TOKEN: ' . $gitlabApiToken . '" "' . $url . '"');
+        runLocally('cd ' . $activeDir . ' && curl --fail --location --output artifacts.zip --header "PRIVATE-TOKEN: ' . $gitlabApiToken . '" "' . $url . '"');
         runLocally('cd ' . $activeDir . ' && vendor/bin/dep db:rmdump {{argument_host}} --options=dumpcode:' . $dumpCode . ' --no-interaction');
         runLocally('cd ' . $activeDir . ' && unzip -o artifacts.zip');
         runLocally('cd ' . $activeDir . ' && mv -n .dep/database/dumps/*dumpcode=' . $dumpCode . '* {{db_storage_path_local}}/');
