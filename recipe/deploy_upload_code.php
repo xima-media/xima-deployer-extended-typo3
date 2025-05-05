@@ -6,7 +6,7 @@ task('deploy:upload_code', function () {
     // upload files/folders
     foreach (get('upload_paths') as $path) {
         if (testLocally('[ -f ' . $path . ' ]') || testLocally('[ -d ' . $path . ' ]')) {
-            upload($path, '{{release_path}}/', ['options' => ['-R']]);
+            upload($path, '{{release_path}}/', ['options' => ['-Rq']]);
         }
     }
 
