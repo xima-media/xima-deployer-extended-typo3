@@ -83,6 +83,7 @@ set('upload_paths', [
     'packages',
     'patches',
     'public/.htaccess',
+    'public/.well-known',
     'public/typo3conf/LocalConfiguration.php',
     'public/typo3conf/AdditionalConfiguration.php',
     'var/labels',
