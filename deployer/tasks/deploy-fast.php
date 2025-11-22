@@ -2,7 +2,7 @@
 
 namespace Deployer;
 
-task('deploy', [
+task('deploy-fast', [
 
     // Standard Deployer task.
     'deploy:info',
@@ -43,14 +43,8 @@ task('deploy', [
     // Standard Deployer task.
     'deploy:clear_paths',
 
-    // sourcebroker/deployer-extended-database task.
-    'db:backup',
-
     // deployer-typo3-deploy-ci task.
     'typo3:cache:warmup:system',
-
-    // xima/xima-deployer-extended-typo3 custom task.
-    'buffer:start',
 
     // xima/xima-deployer-extended-typo3 custom task.
     'db:init',
@@ -75,9 +69,6 @@ task('deploy', [
 
     // sourcebroker/deployer-extended special task. Read more on https://github.com/sourcebroker/deployer-extended#cache-clear-php-http
     'cache:clear_php_http',
-
-    // xima/xima-deployer-extended-typo3 custom task.
-    'buffer:stop',
 
     // Standard Deployer task.
     'deploy:unlock',
