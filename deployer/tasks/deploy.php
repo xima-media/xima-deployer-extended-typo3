@@ -64,9 +64,6 @@ task('deploy', [
     // Standard Deployer task.
     'deploy:symlink',
 
-    // sourcebroker/deployer-extended special task. Read more on https://github.com/sourcebroker/deployer-extended#service-php-fpm-reload
-    'service:php_fpm_reload',
-
     // sourcebroker/deployer-extended special task. Read more on https://github.com/sourcebroker/deployer-extended#cache-clear-php-cli
     'cache:clear_php_cli',
 
