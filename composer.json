@@ -11,6 +11,7 @@
     }
   ],
   "require": {
+    "helhum/dotenv-connector": "^3.2.0",
     "helhum/typo3-console": "^8.2.3",
     "sourcebroker/deployer-typo3-deploy-ci": "^2.0.0",
     "sourcebroker/deployer-typo3-database": "^1.0.0",
