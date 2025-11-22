@@ -10,7 +10,7 @@ class Loader
             ['package' => 'sourcebroker/deployer-extended'],
             ['get' => 'sourcebroker/deployer-typo3-media'],
             ['get' => 'sourcebroker/deployer-typo3-database'],
-            ['get' => 'sourcebroker/deployer-typo3-deploy'],
+            ['get' => 'sourcebroker/deployer-typo3-deploy-ci'],
             ['package' => 'xima/xima-deployer-extended-typo3'],
         ]);
     }

@@ -89,7 +89,3 @@ task('deploy', [
     'deploy:success',
 
 ])->desc('Deploy your TYPO3');
-
-task('dpeloy', ['deploy'])->hidden();
-task('dpeloy:unlock', ['deploy:unlock'])->hidden();
-after('deploy:failed', 'deploy:unlock');
