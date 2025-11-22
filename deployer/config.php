@@ -88,3 +88,12 @@ set('upload_paths', [
     'public/typo3conf/AdditionalConfiguration.php',
     'var/labels',
 ]);
+
+// prevent pipeline fail on first deploy (no tables)
+// + enable database copy in feature branch deployment
+before('db:truncate', 'db:init');
+
+// make LocalConfiguration.php from git writable
+// don't use deploy:update_code since it could be disabled in non-git deployment
+after('deploy:shared', 'deploy:writableLocalConfiguration');
+
