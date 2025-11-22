@@ -69,6 +69,9 @@ set('media_custom', [
     ],
 );
 
+// Common random that can be used between tasks. Must be in form that can be used directly in filename!
+set('random', md5(time() . mt_rand()));
+
 // disable composer version check
 set('composer_channel_autoupdate', false);
 
