@@ -25,7 +25,6 @@ set('driver_typo3cms', true);
 set('writable_dirs', function () {
     return [
         get('web_path') . 'typo3conf',
-
         get('web_path') . 'typo3temp',
         get('web_path') . 'typo3temp/assets',
         get('web_path') . 'typo3temp/assets/images',
@@ -92,3 +91,18 @@ set('upload_paths', [
     'public/typo3conf/AdditionalConfiguration.php',
     'var/labels',
 ]);
+
+// Configure request buffering to avoid errors during deployments
+set('buffer_config', function () {
+    return [
+        'index.php' => [
+            'entrypoint_filename' => get('web_path') . 'index.php',
+        ],
+        'typo3/index.php' => [
+            'entrypoint_filename' => get('web_path') . 'typo3/index.php',
+        ],
+        'typo3/install.php' => [
+            'entrypoint_filename' => get('web_path') . 'typo3/install.php',
+        ]
+    ];
+});
