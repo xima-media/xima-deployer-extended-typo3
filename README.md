@@ -84,14 +84,7 @@ set('shared_dirs', [
 
 ## Non-git deployment
 
-If the source host has no access to the git repository, you can replace `deploy:update_code` with the new `deploy:upload_code` task to transfer all needed files.
-
-```
-task('deploy:update_code')->disable();
-after('deploy:update_code', 'deploy:upload_code');
-```
-
-The files to upload become configured via [`upload_paths`](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/set.php#L61).
+All files become uploaded via rsync and can be configured via [`upload_paths`](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/set.php#L61).
 
 ## Reset from Gitlab Artifact
 
@@ -129,7 +122,7 @@ export-job:
 import-job:
   ...
   script:
-    - vendor/bin/dep reset:from_gitlab_artifact --options="token:$CI_VARIABLE_WITH_API_TOKEN,dumpcode:myArtifact" host-a
+    - vendor/bin/dep reset:from_gitlab_artifact --options="txToken:$CI_VARIABLE_WITH_API_TOKEN,txDumpcode:myArtifact" host-a
   when: manual
 ```
 

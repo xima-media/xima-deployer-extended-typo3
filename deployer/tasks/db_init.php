@@ -2,14 +2,14 @@
 
 namespace Deployer;
 
-use Xima\XimaDeployerExtendedTypo3\Utility\OptionUtility;
+use SourceBroker\DeployerExtendedDatabase\Utility\OptionUtility;
 
 /**
  * Check for missing database: Run database updateschema + import database of base branch
  */
 task('db:init', function () {
     $optionUtility = new OptionUtility(input()->getOption('options'));
-    $baseBranch = $optionUtility->getOption('base_branch');
+    $baseBranch = $optionUtility->getOption('txBaseBranch');
 
     // abort if feature branch has already been configured
     if (!$baseBranch || !get('argument_host')) {
