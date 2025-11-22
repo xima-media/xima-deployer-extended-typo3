@@ -17,7 +17,7 @@ task('db:init', function () {
     }
 
     $activePath = get('deploy_path') . '/' . (test('[ -L {{deploy_path}}/release ]') ? 'release' : 'current');
-    $hasPageTable = (boolean)run('cd ' . $activePath . ' && echo "SHOW TABLES LIKE \'pages\';" | {{bin/php}} {{bin/typo3cms}} database:import');
+    $hasPageTable = (boolean)run('cd ' . $activePath . ' && echo "SHOW TABLES LIKE \'pages\';" | {{bin/php}} {{local/bin/typo3}} database:import');
 
     // no database import if pages table exists
     if ($hasPageTable) {
@@ -28,7 +28,7 @@ task('db:init', function () {
     $baseStage = str_replace(strtolower(get('branch')), strtolower($baseBranch), $targetHost);
 
     // update schema (db:import would fail with empty database)
-    run('cd ' . $activePath . ' && {{bin/php}} {{bin/typo3cms}} database:updateschema');
+    run('cd ' . $activePath . ' && {{bin/php}} {{local/bin/typo3}} database:updateschema');
 
     // abort in case base is target
     if ($baseStage === $targetHost) {

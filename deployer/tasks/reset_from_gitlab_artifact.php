@@ -29,8 +29,8 @@ task('reset:from_gitlab_artifact', function () {
         runLocally('cd ' . $activeDir . ' && vendor/bin/dep db:import {{argument_host}} --options=dumpcode:' . $dumpCode . ' --no-interaction');
         runLocally('cd ' . $activeDir . ' && vendor/bin/dep db:rmdump {{argument_host}} --options=dumpcode:' . $dumpCode . ' --no-interaction');
         runLocally('cd ' . $activeDir . ' && rm -f artifacts.zip');
-        runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{bin/typo3cms}} cache:flush');
-        runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{bin/typo3cms}} cache:warmup');
+        runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{local/bin/typo3}} cache:flush');
+        runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{local/bin/typo3}} cache:warmup');
     } else {
         $verbosity = (new ConsoleUtility())->getVerbosityAsParameter();
         run('cd {{release_or_current_path}} && {{bin/php}} {{bin/deployer}} reset:from_gitlab_artifact ' . $verbosity . ' --options="token:' . $gitlabApiToken . ',dumpcode:' . $dumpCode . '" {{argument_host}}');
