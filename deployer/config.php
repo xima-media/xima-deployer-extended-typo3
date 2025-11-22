@@ -25,6 +25,7 @@ set('driver_typo3cms', true);
 set('writable_dirs', function () {
     return [
         get('web_path') . 'typo3conf',
+
         get('web_path') . 'typo3temp',
         get('web_path') . 'typo3temp/assets',
         get('web_path') . 'typo3temp/assets/images',
@@ -88,12 +89,3 @@ set('upload_paths', [
     'public/typo3conf/AdditionalConfiguration.php',
     'var/labels',
 ]);
-
-// prevent pipeline fail on first deploy (no tables)
-// + enable database copy in feature branch deployment
-before('db:truncate', 'db:init');
-
-// make LocalConfiguration.php from git writable
-// don't use deploy:update_code since it could be disabled in non-git deployment
-after('deploy:shared', 'deploy:writableLocalConfiguration');
-
