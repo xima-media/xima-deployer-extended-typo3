@@ -4,8 +4,15 @@ namespace Deployer;
 
 // install deployer-extended-typo3
 $vendorRoot = is_dir(__DIR__ . '/../../../vendor') ? __DIR__ . '/../../..' : __DIR__ . '/../..';
-require_once($vendorRoot . '/vendor/sourcebroker/deployer-loader/autoload.php');
-new \SourceBroker\DeployerExtendedTypo3\Loader();
+require_once($vendorRoot . './vendor/autoload.php');
+
+new \SourceBroker\DeployerLoader\Load([
+    ['get' => 'sourcebroker/deployer-typo3-media'],
+    ['get' => 'sourcebroker/deployer-typo3-database'],
+    ['get' => 'sourcebroker/deployer-typo3-deploy'],
+    ['get' => 'sourcebroker/deployer-extended-typo3'],
+]);
+
 
 // install default settings
 require_once(__DIR__ . '/set.php');
