@@ -23,8 +23,8 @@ composer require xima/xima-deployer-extended-typo3
 
 namespace Deployer;
 
-require_once(__DIR__ . '/vendor/xima/xima-deployer-extended-typo3/autoload.php');
-
+require_once './vendor/autoload.php';
+new \Xima\XimaDeployerExtendedTypo3\Loader();
 
 set('repository', 'git@github.com:your-repo-name.git');
 
@@ -46,22 +46,22 @@ for ($i = 1; $i <= 999; $i++) {
 }
 
 // main host
-defineTestHost('master', 'live');
+defineTestHost('main', 'live');
 ```
 
 ## Feature-Branch deployment
 
-There is a new command ```db:init``` which runs right before ```db:truncate```. This command checks for the *base_branch* option:
+There is a new command ```db:init``` which runs right before ```db:truncate```. This command checks for the *txBaseBranch* option:
 
 ```
-vendor/bin/dep deploy-fast example-ticket-001 --options=base_branch:master
+vendor/bin/dep deploy-fast example-ticket-001 --options=txBaseBranch:main
 ```
 
-If this option is set, the command checks if the current feature host has been initialized before. In case of an empty database, the `db:copy` command is triggert to fetch a database copy from the given **base_branch**.
+If this option is set, the command checks if the current feature instance has been initialized before. In case of an empty database, the `db:copy` command is triggert to fetch a database copy from the given base branch.
 
 ## Default values
 
-Configuration covers typical permission, shared and writtable directory settings. See [set.php](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/set.php) for default values.
+Configuration covers typical permission, shared and writable directory settings. See [config.php](https://github.com/xima-media/xima-deployer-extended-typo3/blob/main/config.php) for default values.
 
 To extend a default values array, use the following `set` command:
 
