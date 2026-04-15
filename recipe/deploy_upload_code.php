@@ -13,4 +13,5 @@ task('deploy:upload_code', function () {
     // fix permissions
     run('find {{release_path}} -type d -exec chmod {{writable_chmod_mode}} {} \;');
     run('find {{release_path}} -type f -exec chmod 0640 {} \;');
+    run('find {{release_path}}/vendor/bin/ -type f -exec chmod 0750 {} \;');
 });
