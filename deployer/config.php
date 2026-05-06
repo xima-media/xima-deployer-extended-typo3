@@ -18,7 +18,7 @@ localhost('local')
     ->set('bin/php', 'php')
     ->set('deploy_path', getcwd());
 
-// read typo3 database connection from bin/typo3cms > AdditionalConfiguration.php > .env
+// read typo3 database connection from bin/typo3 > additional.php > .env
 set('driver_typo3cms', true);
 
 // set writable dirs
@@ -46,7 +46,6 @@ set('shared_dirs', function () {
         'public/typo3temp/assets',
         'var/log',
         'var/transient',
-        'var/goaccess',
     ];
 });
 
@@ -56,9 +55,6 @@ set('shared_files', [
     '.env.local',
 ]);
 
-// set log files dir
-set('log_files', 'var/log/*.log');
-
 // use curl instead of wget
 set('fetch_method', 'curl');
 
@@ -67,6 +63,9 @@ set('media_custom', [
     'flags' => 'rzp',
     ],
 );
+
+// Common random that can be used between tasks. Must be in form that can be used directly in filename!
+set('random', md5(time() . mt_rand()));
 
 // disable composer version check
 set('composer_channel_autoupdate', false);
@@ -84,7 +83,20 @@ set('upload_paths', [
     'patches',
     'public/.htaccess',
     'public/.well-known',
-    'public/typo3conf/LocalConfiguration.php',
-    'public/typo3conf/AdditionalConfiguration.php',
     'var/labels',
 ]);
+
+// Configure request buffering to avoid errors during deployments
+set('buffer_config', function () {
+    return [
+        'index.php' => [
+            'entrypoint_filename' => get('web_path') . 'index.php',
+        ],
+        'typo3/index.php' => [
+            'entrypoint_filename' => get('web_path') . 'typo3/index.php',
+        ],
+        'typo3/install.php' => [
+            'entrypoint_filename' => get('web_path') . 'typo3/install.php',
+        ]
+    ];
+});
