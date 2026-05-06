@@ -86,3 +86,6 @@ task('deploy', [
     'deploy:success',
 
 ])->desc('Deploy your TYPO3');
+
+// In case of failure, stop the buffer to prevent it from running indefinitely.
+after('deploy:failed', 'buffer:stop');
