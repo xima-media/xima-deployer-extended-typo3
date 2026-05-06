@@ -26,8 +26,6 @@ namespace Deployer;
 require_once './vendor/autoload.php';
 new \Xima\XimaDeployerExtendedTypo3\Loader();
 
-set('repository', 'git@github.com:your-repo-name.git');
-
 function defineTestHost($branchName, $stage)
 {
     host('example-' . strtolower($branchName))
