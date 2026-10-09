@@ -11,11 +11,11 @@ function runMigration($taskListSetting) {
         foreach (get($taskListSetting, []) as $task) {
             // Import SQL migration files.
             if (str_ends_with($task, '.sql')) {
-                runLocally('cd ' . $activeDir . ' && cat ' . $task . ' | {{local/bin/php}} {{bin/typo3cms}} database:import -vvv');
+                runLocally('cd ' . $activeDir . ' && cat ' . $task . ' | {{local/bin/php}} {{local/bin/typo3}} database:import -vvv');
                 continue;
             }
             // Run the specified TYPO3 upgrade wizard.
-            runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{bin/typo3cms}} upgrade:run ' . $task . ' -vvv --no-interaction');
+            runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{local/bin/typo3}} upgrade:run ' . $task . ' -vvv --no-interaction');
         }
     } else {
         run('cd {{release_or_current_path}} && {{bin/php}} {{bin/deployer}} deploy:migration:before {{argument_host}}');
