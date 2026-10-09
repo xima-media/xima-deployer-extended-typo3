@@ -1,5 +1,7 @@
 <?php
 
+namespace Deployer;
+
 function runMigration($taskListSetting) {
     if (get('is_argument_host_the_same_as_local_host')) {
 
