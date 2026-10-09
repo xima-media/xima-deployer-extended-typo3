@@ -61,6 +61,23 @@ set('shared_dirs', [
 ]);
 ```
 
+## Database migrations and upgrade wizards
+
+The deployment runs configured SQL migrations and TYPO3 upgrade wizards immediately before and after `typo3:extension:setup`. Configure the tasks in your `deploy.php` file:
+
+```php
+set('migration_before_tasks', [
+    '.migration/001-before.sql',
+    'my_upgrade_wizard',
+]);
+
+set('migration_after_tasks', [
+    '.migration/002-after.sql',
+]);
+```
+
+Tasks run in the order listed. Entries ending in `.sql` are imported with TYPO3 Console's `database:import` command; all other entries are passed to `upgrade:run` as upgrade wizard identifiers. Omit either setting, or provide an empty list, if there are no tasks for that deployment phase.
+
 ## Feature-Branch deployment
 
 There is a new command ```db:init``` which runs right before ```db:truncate```. This command checks for the *txBaseBranch* option:

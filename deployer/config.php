@@ -75,6 +75,7 @@ set('check_composer_install_options', '--verbose --prefer-dist --no-progress --n
 
 // files to upload in non-git deployment
 set('upload_paths', [
+    '.migration',
     'composer.json',
     'composer.lock',
     'deploy.php',
