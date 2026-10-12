@@ -47,6 +47,9 @@ task('deploy-fast', [
     'typo3:cache:warmup:system',
 
     // xima/xima-deployer-extended-typo3 custom task.
+    'buffer:start',
+
+    // xima/xima-deployer-extended-typo3 custom task.
     'db:init',
 
     // deployer-typo3-deploy-ci task.
@@ -67,6 +70,9 @@ task('deploy-fast', [
     // sourcebroker/deployer-extended special task. Read more on https://github.com/sourcebroker/deployer-extended#cache-clear-php-http
     'cache:clear_php_http',
 
+    // xima/xima-deployer-extended-typo3 custom task.
+    'buffer:stop',
+
     // Standard Deployer task.
     'deploy:unlock',
 
@@ -76,4 +82,7 @@ task('deploy-fast', [
     // Standard Deployer task.
     'deploy:success',
 
-])->desc('Deploy your TYPO3');
+])->desc('Deploy your TYPO3 fast (no database backup)');
+
+// In case of failure, stop the buffer to prevent it from running indefinitely.
+after('deploy:failed', 'buffer:stop');
