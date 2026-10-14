@@ -4,38 +4,31 @@ namespace Deployer;
 
 use Xima\XimaDeployerExtendedTypo3\Utility\EnvUtility;
 
+// File that environment:urls:write creates after every deployment, relative to the working directory.
+// Empty disables it. Enable it in CI e.g. with `-o environment_urls_file=environment-urls.env`.
+set('environment_urls_file', '');
+
 task('environment:urls', function () {
-    $vars = EnvUtility::getRemoteAppEnvVars();
-
-    $isUrl = static fn (string $url): bool => in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)
-        && (string)parse_url($url, PHP_URL_HOST) !== ''
-        && preg_match('/[\s,]/', $url) === 0;
-
-    $primary = $vars['TYPO3_BASE_URL'] ?? '';
-    if (!$isUrl($primary)) {
-        throw new \RuntimeException('TYPO3_BASE_URL must be a full URL, got "' . $primary . '"');
-    }
-
-    $aliases = [];
-    foreach ($vars as $key => $value) {
-        if (preg_match('/^TYPO3_ALIAS_URL_(\d+)$/', $key, $match) === 1) {
-            if ($match[1] !== (string)(int)$match[1]) {
-                throw new \RuntimeException($key . ': index with leading zero');
-            }
-            if (!$isUrl($value)) {
-                throw new \RuntimeException($key . ' must be a full URL, got "' . $value . '"');
-            }
-            $aliases[(int)$match[1]] = $value;
-        }
-    }
-    ksort($aliases);
-    if ($aliases !== [] && array_keys($aliases) !== range(0, count($aliases) - 1)) {
-        throw new \RuntimeException('TYPO3_ALIAS_URL_* must be numbered 0, 1, 2, ... without gaps, got ' . implode(', ', array_keys($aliases)));
-    }
-
-    $content = 'ENVIRONMENT_URL_PRIMARY=' . $primary . "\n";
-    if ($aliases !== []) {
-        $content .= 'ENVIRONMENT_URL_ALIASES=' . implode(',', $aliases) . "\n";
-    }
-    output()->write($content);
+    output()->write(EnvUtility::getEnvironmentUrls());
 })->once()->desc('Print the environment\'s primary and alias URLs for a GitLab dotenv report');
+
+task('environment:urls:write', function () {
+    $file = get('environment_urls_file');
+    if ($file === '') {
+        return;
+    }
+    // The release is already live: a missing or invalid URL must not fail the deployment.
+    try {
+        $content = EnvUtility::getEnvironmentUrls();
+    } catch (\RuntimeException $e) {
+        warning('environment:urls:write skipped: ' . $e->getMessage());
+        if (is_file($file)) {
+            unlink($file);
+        }
+        return;
+    }
+    file_put_contents($file, $content);
+    info('Environment URLs written to ' . $file);
+})->once()->hidden();
+
+after('deploy:success', 'environment:urls:write');

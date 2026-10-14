@@ -89,17 +89,19 @@ ENVIRONMENT_URL_ALIASES=https://a.example.com/,https://b.example.com/
 
 `ENVIRONMENT_URL_PRIMARY` is `TYPO3_BASE_URL`. `ENVIRONMENT_URL_ALIASES` lists `TYPO3_ALIAS_URL_0`, `TYPO3_ALIAS_URL_1`, ... in index order and is omitted if there are none. The task fails if a value is not a full `http(s)` URL or the alias indices have gaps.
 
-In a GitLab CI deploy job, keep only these lines and pass them on as dotenv report:
+Only `APP_ENV`, `TYPO3_BASE_URL` and `TYPO3_ALIAS_URL_*` are read: the env files are filtered on the remote host, so no other value shows up in Deployer's output, at any verbosity. A URL that references another variable (`${DOMAIN}`) therefore resolves without it and fails the check.
+
+### Write them on every deployment
+
+Set `environment_urls_file` and `deploy` / `deploy-fast` write these lines to that file (relative to the working directory) right after `deploy:success`. An invalid URL only logs a warning, as the release is already live, and removes a stale file. In a GitLab CI deploy job, enable it per call and pass the file on as dotenv report:
 
 ```yaml
 script:
-  - vendor/bin/dep environment:urls stage=test | grep -E '^ENVIRONMENT_URL_(PRIMARY|ALIASES)=' | tee environment-urls.env
+  - vendor/bin/dep deploy stage=test -o environment_urls_file=environment-urls.env
 artifacts:
   reports:
     dotenv: environment-urls.env
 ```
-
-Do not run it with `-v` or higher outside such a pipe: Deployer then prints the output of every remote command, including the env files.
 
 ## Feature-Branch deployment
 
