@@ -32,7 +32,7 @@ class BranchUtility
 
         $candidates = [getenv('CI_COMMIT_BRANCH') ?: ''];
 
-        if (!getenv('CI') && $instance === 'local') {
+        if (getenv('CI') !== 'true' && $instance === 'local') {
             exec('git for-each-ref --format="%(refname)" refs/heads refs/remotes 2>/dev/null', $refs);
             foreach ($refs as $ref) {
                 $candidates[] = preg_replace('#^refs/(heads|remotes/[^/]+)/#', '', $ref);
