@@ -5,7 +5,7 @@ This package uses different `sourcebroker/deployer-*` packages to create deploym
 ## Highlights
 
 * **Default values** for typical server environment
-* **Feature-Branch Deployment** with new `base_branch` option
+* **Feature-Branch Deployment** with new `base_branch` option and hosts only for existing branches
 * **Non-git** deployment
 * **New commands** `dep launch` & `dep sequelace`
 
@@ -39,14 +39,37 @@ function defineTestHost($branchName, $stage)
 }
 
 // feature branch hosts
-for ($i = 1; $i <= 999; $i++) {
-    $branchName = 'TICKET-' . $i;
-    defineTestHost($branchName, 'feature');
+$branches = \Xima\XimaDeployerExtendedTypo3\Utility\BranchUtility::environmentBranches('example-', [
+    'TICKET-\d+' => 'feature',
+]);
+foreach ($branches as $branchName => $stage) {
+    defineTestHost($branchName, $stage);
 }
 
 // main host
 defineTestHost('main', 'live');
 ```
+
+## Hosts for feature branches
+
+`BranchUtility::environmentBranches()` returns only the branches that need a host, instead of defining a host for every possible ticket number. It takes the host name prefix and a list of branch name patterns (regex without delimiters, case-insensitive) with the stage of their hosts:
+
+```php
+BranchUtility::environmentBranches('example-', [
+    'TICKET-\d+' => 'feature',
+    'renovate-[0-9a-f]+' => 'test',
+]);
+// ['TICKET-12' => 'feature', 'renovate-1a2b3c4d' => 'test', ...]
+```
+
+Everything after the first `_` of a branch name is ignored, so `TICKET-12_some-feature` deploys to `TICKET-12`. The branches are collected without any network access, so neither a missing VPN nor a CI runner without git history blocks Deployer:
+
+* `CI_COMMIT_BRANCH`
+* host names on the command line, including nested calls like `db:export example-ticket-12` or `--options=target:example-ticket-12` that run on a remote instance
+* `INSTANCE` of the current instance
+* local and remote-tracking git branches, only on the local instance outside of CI (run `git fetch` to see new remote branches)
+
+Hosts that must always exist, like `main`, are still defined explicitly.
 
 ## Default values
 
