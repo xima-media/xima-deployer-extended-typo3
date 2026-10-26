@@ -28,6 +28,10 @@ task('buffer:start', function () {
                 }
                 // general inject settings
                 $entrypointFilename = $inject['entrypoint_filename'];
+                // TYPO3 v14 removed typo3/index.php and typo3/install.php
+                if (!test('[ -f ' . $overwriteReleasePath . $entrypointFilename . ' ]')) {
+                    continue;
+                }
                 if (empty($inject['entrypoint_needle'])) {
                     $entrypointNeedle = '<?php';
                 } else {
@@ -105,7 +109,7 @@ task('buffer:start', function () {
                 } else {
                     $entrypointInject = $inject['entrypoint_inject'];
                 }
-                $entrypointFileContent = trim(run('cd {{release_path}} && [ -f ' . $entrypointFilename . ' ] && cat ' . $entrypointFilename . ' || echo ""'));
+                $entrypointFileContent = trim(run('cd ' . $overwriteReleasePath . ' && [ -f ' . $entrypointFilename . ' ] && cat ' . $entrypointFilename . ' || echo ""'));
                 if (strpos($entrypointFileContent, $entrypointInjectStartComment) === false) {
                     if (!empty($entrypointFileContent)) {
                         $pos = strpos($entrypointFileContent, $entrypointNeedle);
