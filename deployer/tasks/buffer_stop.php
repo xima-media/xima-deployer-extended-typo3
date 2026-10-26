@@ -22,7 +22,7 @@ task('buffer:stop', function () {
             $oldReleaseFlagFilename = empty($inject['oldrelease_flag__filename']) ?
                 '.flag.oldrelease' : $inject['oldrelease_flag_filename'];
             $entrypointDirectory = dirname($inject['entrypoint_filename']) === '.' ? '' : dirname($inject['entrypoint_filename']);
-            if (test('[ -e ' . $overwriteReleasePath . '/' . $entrypointDirectory . ' ]')) {
+            if (test('[ -f ' . $overwriteReleasePath . '/' . $inject['entrypoint_filename'] . ' ]')) {
                 run('touch ' . $overwriteReleasePath . '/' . $entrypointDirectory . '/' . $oldReleaseFlagFilename);
             }
         }
