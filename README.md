@@ -50,6 +50,23 @@ foreach ($branches as $branchName => $stage) {
 defineTestHost('main', 'live');
 ```
 
+## Server requirements
+
+PHP-FPM must resolve the `current` symlink itself, so requests get the new release right after `deploy:symlink`. With Apache and PHP-FPM, set this in the FPM `php.ini` (see [Deployer: Avoid php-fpm reloading](https://deployer.org/docs/8.x/avoid-php-fpm-reloading)):
+
+```ini
+opcache.revalidate_path=1
+```
+
+Without it, OPcache keeps serving the entry scripts of the previous release under the `current/` path until it is reset. To check, print `__FILE__` in `public/index.php`: it must point to `releases/<n>/`, not `current/`. `$_SERVER['SCRIPT_FILENAME']` always contains `current` under Apache.
+
+`buffer:start` holds incoming requests during the deployment, and `buffer:stop` releases them right after `typo3:cache:flush:pages`. `cache:clear_php_http` runs afterwards and only removes OPcache entries of previous releases. A failed request only prints a warning. Settings:
+
+| Setting | Default | Description |
+|---|---|---|
+| `cache:clear_php_http:timeout` | `60` | Request timeout in seconds |
+| `cache:clear_php_http:fail_on_error` | `false` | Fail the deployment if the request fails |
+
 ## Hosts for feature branches
 
 `BranchUtility::environmentBranches()` returns only the branches that need a host, instead of defining a host for every possible ticket number. It takes the host name prefix and a list of branch name patterns (regex without delimiters, case-insensitive) with the stage of their hosts:
