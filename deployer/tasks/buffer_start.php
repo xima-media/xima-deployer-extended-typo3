@@ -56,7 +56,7 @@ task('buffer:start', function () {
                 }
 
                 // Action if php choose old release to serve request
-                if (empty($inject['oldrelease_flag__filename'])) {
+                if (empty($inject['oldrelease_flag_filename'])) {
                     $oldReleaseFlagFilename = '.flag.oldrelease';
                 } else {
                     $oldReleaseFlagFilename = $inject['oldrelease_flag_filename'];
@@ -81,30 +81,27 @@ task('buffer:start', function () {
                 if (empty($inject['entrypoint_inject'])) {
                     $entrypointInject =
                         "// Buffering php requests\n" .
-                        "isset(\$_SERVER['HTTP_X_DEPLOYER_DEPLOYMENT']) && \$_SERVER['HTTP_X_DEPLOYER_DEPLOYMENT'] == '{{random}}' ? \$deployerExtendedEnableBufferLock = false: \$deployerExtendedEnableBufferLock = true;\n" .
-                        "isset(\$_ENV['DEPLOYER_DEPLOYMENT']) && \$_ENV['DEPLOYER_DEPLOYMENT'] == '{{random}}' ? \$deployerExtendedEnableBufferLock = false: \$deployerExtendedEnableBufferLock = true;\n" .
                         "clearstatcache(true, __DIR__ . '/$requestBufferFlagFilename');\n" .
-                        "while (file_exists(__DIR__ . '/$requestBufferFlagFilename') && \$deployerExtendedEnableBufferLock) {\n" .
+                        "while (file_exists(__DIR__ . '/$requestBufferFlagFilename')) {\n" .
                         "    usleep($requestBufferSleep);\n" .
                         "    clearstatcache(true);\n" .
                         "    if(time() - @filectime(__DIR__ . '/$requestBufferFlagFilename') > $requestBufferDuration) @unlink(__DIR__ . '/$requestBufferFlagFilename');\n" .
                         "}\n" .
-                        "// Clearstatcache for n seconds after deploy" .
-                        "clearstatcache(true, __DIR__ . '/$clearStatCacheFlagFilename')\n" .
+                        "// Clearstatcache for n seconds after deploy\n" .
+                        "clearstatcache(true, __DIR__ . '/$clearStatCacheFlagFilename');\n" .
                         "if (file_exists(__DIR__ . '/$clearStatCacheFlagFilename')) {\n" .
                         "    clearstatcache(true);\n" .
                         "    if(time() - @filectime(__DIR__ . '/$clearStatCacheFlagFilename') > $clearStatCacheDuration) @unlink(__DIR__ . '/$clearStatCacheFlagFilename');\n" .
                         "}\n" .
-                        "// Action if php choose old release to serve request" .
-                        "clearstatcache(true, __DIR__ . '/$oldReleaseFlagFilename')\n" .
+                        "// Action if php choose old release to serve request\n" .
+                        "clearstatcache(true, __DIR__ . '/$oldReleaseFlagFilename');\n" .
                         "if(file_exists(__DIR__ . '/$oldReleaseFlagFilename')) {\n" .
                         "    clearstatcache(true);\n" .
                         "    usleep($oldReleaseRedirectSleep);\n" .
                         "    if(!empty(\$_SERVER['REQUEST_SCHEME']) && !empty(\$_SERVER['SERVER_NAME'])) {\n" .
-                        "      header('Location: ' . \$_SERVER['REQUEST_SCHEME'] . '://' . \$_SERVER['SERVER_NAME'] . !empty(\$_SERVER['REQUEST_URI']) ? \$_SERVER['REQUEST_URI'] : '', true, 307);\n" .
-                        "    } else {\n" .
-                        "      exit();\n" .
+                        "      header('Location: ' . \$_SERVER['REQUEST_SCHEME'] . '://' . \$_SERVER['SERVER_NAME'] . (\$_SERVER['REQUEST_URI'] ?? ''), true, 307);\n" .
                         "    }\n" .
+                        "    exit();\n" .
                         "}";
                 } else {
                     $entrypointInject = $inject['entrypoint_inject'];
