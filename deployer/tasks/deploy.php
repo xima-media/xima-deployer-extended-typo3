@@ -70,11 +70,11 @@ task('deploy', [
     // deployer-typo3-deploy task.
     'typo3:cache:flush:pages',
 
-    // sourcebroker/deployer-extended special task. Read more on https://github.com/sourcebroker/deployer-extended#cache-clear-php-http
-    'cache:clear_php_http',
-
     // xima/xima-deployer-extended-typo3 custom task.
     'buffer:stop',
+
+    // sourcebroker/deployer-extended special task. Read more on https://github.com/sourcebroker/deployer-extended#cache-clear-php-http
+    'cache:clear_php_http',
 
     // Standard Deployer task.
     'deploy:unlock',
