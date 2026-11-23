@@ -12,18 +12,21 @@ function runMigration($before = false) {
 
         $activeDir = get('deploy_path') . (testLocally('[ -e {{deploy_path}}/release ]') ? '/release' : '/current');
         $activeDir = testLocally('[ -e ' . $activeDir . ' ]') ? $activeDir : get('deploy_path');
+        // 0 disables the timeout. Deployer 8 replaces a null timeout with default_timeout.
+        $timeout = get('migration_timeout') ?? 0;
 
         foreach (get($before ? 'migration_before_tasks' : 'migration_after_tasks', []) as $task) {
             // Import SQL migration files.
             if (str_ends_with($task, '.sql')) {
-                runLocally('cd ' . $activeDir . ' && cat ' . $task . ' | {{local/bin/php}} {{local/bin/typo3}} database:import -vvv', ['timeout' => get('migration_timeout')]);
+                runLocally('cd ' . $activeDir . ' && cat ' . $task . ' | {{local/bin/php}} {{local/bin/typo3}} database:import -vvv', timeout: $timeout);
                 continue;
             }
             // Run the specified TYPO3 upgrade wizard.
-            runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{local/bin/typo3}} upgrade:run ' . $task . ' -vvv --no-interaction', ['timeout' => get('migration_timeout')]);
+            runLocally('cd ' . $activeDir . ' && {{local/bin/php}} {{local/bin/typo3}} upgrade:run ' . $task . ' -vvv --no-interaction', timeout: $timeout);
         }
     } else {
-        run('cd {{release_or_current_path}} && {{bin/php}} {{bin/deployer}} deploy:migration:' . ($before ? 'before' : 'after') . ' {{argument_host}}', ['timeout' => get('migration_timeout')]);
+        // No limit for the whole phase: the remote host caps every step itself.
+        run('cd {{release_or_current_path}} && {{bin/php}} {{bin/deployer}} deploy:migration:' . ($before ? 'before' : 'after') . ' {{argument_host}}', timeout: 0);
     }
 }
 
