@@ -107,6 +107,8 @@ The migrations run without a timeout, as upgrade wizards can take longer than De
 set('migration_timeout', 1800);
 ```
 
+or for a single run: `vendor/bin/dep deploy -o migration_timeout=1800 <host>`.
+
 ## Feature-Branch deployment
 
 There is a new command ```db:init``` which runs right before ```db:truncate```. This command checks for the *txBaseBranch* option:

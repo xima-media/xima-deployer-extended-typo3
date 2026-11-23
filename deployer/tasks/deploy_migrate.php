@@ -26,7 +26,9 @@ function runMigration($before = false) {
         }
     } else {
         // No limit for the whole phase: the remote host caps every step itself.
-        run('cd {{release_or_current_path}} && {{bin/php}} {{bin/deployer}} deploy:migration:' . ($before ? 'before' : 'after') . ' {{argument_host}}', timeout: 0);
+        // Pass the limit on, so a value set with -o on the command line applies there too.
+        $option = get('migration_timeout') !== null ? ' -o migration_timeout=' . (int) get('migration_timeout') : '';
+        run('cd {{release_or_current_path}} && {{bin/php}} {{bin/deployer}} deploy:migration:' . ($before ? 'before' : 'after') . ' {{argument_host}}' . $option, timeout: 0);
     }
 }
 
