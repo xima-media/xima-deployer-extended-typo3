@@ -101,6 +101,14 @@ set('migration_after_tasks', [
 
 Tasks run in the order listed. Entries ending in `.sql` are imported with TYPO3 Console's `database:import` command; all other entries are passed to `upgrade:run` as upgrade wizard identifiers. Omit either setting, or provide an empty list, if there are no tasks for that deployment phase.
 
+The migrations run without a timeout, as upgrade wizards can take longer than Deployer's default of 300 seconds. To cap every migration step, set a limit in seconds:
+
+```php
+set('migration_timeout', 1800);
+```
+
+or for a single run: `vendor/bin/dep deploy -o migration_timeout=1800 <host>`.
+
 ## Feature-Branch deployment
 
 There is a new command ```db:init``` which runs right before ```db:truncate```. This command checks for the *txBaseBranch* option:
