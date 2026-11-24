@@ -119,6 +119,16 @@ vendor/bin/dep deploy-fast example-ticket-001 --options=txBaseBranch:main
 
 If this option is set, the command checks if the current feature instance has been initialized before. In case of an empty database, the `db:copy` command is triggert to fetch a database copy from the given base branch.
 
+### Timeout of database tasks
+
+Copying a large database takes longer than Deployer's default timeout of 300 seconds. The database tasks (`db:copy`, `db:import`, ...) call each other as nested Deployer processes, locally and on the remote host, so every Deployer process that runs a `db:*` task uses `db_timeout` (default: 1800 seconds) instead of `default_timeout`. `0` disables the limit:
+
+```php
+set('db_timeout', 3600);
+```
+
+Other tasks keep `default_timeout`.
+
 
 ## Non-git deployment
 
