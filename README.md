@@ -121,13 +121,13 @@ If this option is set, the command checks if the current feature instance has be
 
 ### Timeout of database tasks
 
-Copying a large database takes longer than Deployer's default timeout of 300 seconds. The database tasks (`db:copy`, `db:import`, ...) call each other as nested Deployer processes, locally and on the remote host, so every Deployer process that runs a `db:*` task uses `db_timeout` (default: 1800 seconds) instead of `default_timeout`. `0` disables the limit:
+Copying a large database takes longer than Deployer's default timeout of 300 seconds. The database tasks (`db:copy`, `db:import`, ...) call each other as nested Deployer processes, locally and on the remote host. Every `db:*` task, including those inside `deploy` (`db:backup`, `db:init`, `db:truncate`), therefore runs with `db_timeout` (default: 1800 seconds) instead of `default_timeout`. `0` disables the limit:
 
 ```php
 set('db_timeout', 3600);
 ```
 
-Other tasks keep `default_timeout`.
+or for a single run: `vendor/bin/dep db:copy <source> --options=target:<target> -o db_timeout=0`. Other tasks keep `default_timeout`. `db:*` tasks defined in your `deploy.php` are not covered.
 
 
 ## Non-git deployment
