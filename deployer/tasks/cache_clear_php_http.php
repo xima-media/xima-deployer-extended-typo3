@@ -45,14 +45,14 @@ task('cache:clear_php_http', function () {
             $result = runLocally(
                 '{{local/bin/curl}} ' . get('fetch_method_curl_options',
                     '--insecure --silent --location --output /dev/null --write-out "%{http_code}"') . ' ' . escapeshellarg($clearCacheUrl) . ' 2>/dev/null',
-                ['timeout' => get('cache:clear_php_http:timeout', 15)]
+                timeout: get('cache:clear_php_http:timeout', 15)
             );
             break;
 
         case 'file_get_contents':
             $result = runLocally(
                 '{{local/bin/php}} -r \'file_get_contents("' . escapeshellarg($clearCacheUrl) . '");\'',
-                ['timeout' => get('cache:clear_php_http:timeout', 15)]
+                timeout: get('cache:clear_php_http:timeout', 15)
             );
             break;
 
@@ -61,7 +61,7 @@ task('cache:clear_php_http', function () {
             $result = runLocally(
                 '{{local/bin/wget}} ' . get('fetch_method_wget_options',
                     '--no-check-certificate -q -O /dev/null') . ' ' . escapeshellarg($clearCacheUrl),
-                ['timeout' => get('cache:clear_php_http:timeout', 15)]
+                timeout: get('cache:clear_php_http:timeout', 15)
             );
             break;
     }
