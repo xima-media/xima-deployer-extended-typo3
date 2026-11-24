@@ -127,7 +127,7 @@ Copying a large database takes longer than Deployer's default timeout of 300 sec
 set('db_timeout', 3600);
 ```
 
-or for a single run: `vendor/bin/dep db:copy <source> --options=target:<target> -o db_timeout=0`. Other tasks keep `default_timeout`. `db:*` tasks defined in your `deploy.php` are not covered.
+Set it in `deploy.php`: the nested processes load `deploy.php` again, but they do not receive a `-o db_timeout=…` from the command line. Other tasks keep `default_timeout`. `db:*` tasks defined in your `deploy.php` are not covered.
 
 
 ## Non-git deployment
