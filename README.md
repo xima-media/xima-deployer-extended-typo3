@@ -55,7 +55,7 @@ defineTestHost('main', 'live');
 PHP-FPM must resolve the `current` symlink itself. Settings for the PHP-FPM `php.ini` (see [Deployer: Avoid php-fpm reloading](https://deployer.org/docs/8.x/avoid-php-fpm-reloading)):
 
 ```ini
-; required: OPcache resolves the "current" symlink and caches files under their release path
+; recommended: OPcache resolves the "current" symlink and caches files under their release path
 opcache.revalidate_path=1
 
 ; recommended: no open_basedir, any value disables the realpath cache and slows down every request
@@ -69,23 +69,23 @@ realpath_cache_size=16M
 opcache.max_accelerated_files=65407
 ```
 
-Without `opcache.revalidate_path=1`, OPcache keeps the entry points of the previous release under the `current/` path, and the redirect described below returns to the previous release until `cache:clear_php_http` runs.
+Without `opcache.revalidate_path=1`, OPcache keeps the entry points of the previous release under the `current/` path until `cache:clear_php_http` runs. Until then, every request takes the detour to the new release described below.
 
 PHP rounds `opcache.max_accelerated_files` up to the next of its prime numbers (…, 16229, 32531, 65407, 130987, …), so values between 32532 and 65407 all result in 65407.
 
 ## Request buffer and release switch
 
-`buffer:start` holds incoming requests during the deployment. `buffer:stop` releases them right after `typo3:cache:flush:pages` and marks all previous releases.
+`buffer:start` holds incoming requests during the deployment. It also replaces code injected by earlier versions of this package in the current release. `buffer:stop` releases the requests right after `typo3:cache:flush:pages` and marks all releases except the one `current` points to. It runs after `dep rollback` as well.
 
-A PHP-FPM worker can still resolve `current` to a previous release until its realpath cache entry expires (`realpath_cache_ttl`). Such a request runs only the entry point of that release: it clears the realpath cache of the worker and sends a relative 307 redirect to the same URL. The next request gets the new release. After `dep rollback`, the restored release is not redirected.
+A PHP-FPM worker can still resolve `current` to a previous release until its realpath cache entry expires (`realpath_cache_ttl`). Such a request runs only the entry point of that release: it clears the realpath cache of the worker and includes the entry point of the release `current` points to in the same request. The client gets no redirect, and request method and body are kept.
 
-`cache:clear_php_http` runs after `buffer:stop` and only removes OPcache entries of previous releases. A failed request only prints a warning.
+`cache:clear_php_http` runs after `buffer:stop` and calls `opcache_reset()`. This empties the whole OPcache of the PHP-FPM instance, including the new release and other sites served by it. A failed request only prints a warning.
 
 | Setting | Default | Description |
 |---|---|---|
 | `cache:clear_php_http:timeout` | `60` | Request timeout in seconds |
 | `cache:clear_php_http:fail_on_error` | `false` | Fail the deployment if the request fails |
-| `oldrelease_redirect_sleep` in `buffer_config` | `0` | Microseconds to wait before the redirect from a previous release |
+| `oldrelease_redirect_sleep` in `buffer_config` | `0` | Microseconds to wait before a previous release includes the current entry point |
 
 ## Hosts for feature branches
 

@@ -15,6 +15,7 @@ task('buffer:start', function () {
     if (preg_match('/^[a-zA-Z0-9]$/', get('random'))) {
         throw new GracefulShutdownException('The "random" config var should be only /^[a-zA-Z0-9]$/ because its used in filenames.');
     }
+    $currentPath = var_export(run('cd ' . get('deploy_path') . ' && pwd -P') . '/current', true);
     foreach (['release', 'current'] as $overwriteRelease) {
         $overwriteReleasePath = get('deploy_path') . '/' . $overwriteRelease . '/';
         if (test("[ -e $overwriteReleasePath ]")) {
@@ -63,7 +64,6 @@ task('buffer:start', function () {
                 }
                 $oldReleaseRedirectSleep = (int)($inject['oldrelease_redirect_sleep'] ?? 0);
 
-                $currentPath = var_export(rtrim(get('deploy_path'), '/') . '/current', true);
                 if (empty($inject['entrypoint_inject'])) {
                     $entrypointInject =
                         "// Buffering php requests\n" .
@@ -79,7 +79,7 @@ task('buffer:start', function () {
                         "    clearstatcache(true);\n" .
                         "    if(strpos(realpath(__DIR__) . '/', realpath($currentPath) . '/') !== 0) {\n" .
                         ($oldReleaseRedirectSleep > 0 ? "        usleep($oldReleaseRedirectSleep);\n" : '') .
-                        "        header('Location: ' . (\$_SERVER['REQUEST_URI'] ?? '/'), true, 307);\n" .
+                        "        include realpath($currentPath) . " . var_export('/' . $entrypointFilename, true) . ";\n" .
                         "        exit();\n" .
                         "    }\n" .
                         "}";
@@ -87,27 +87,29 @@ task('buffer:start', function () {
                     $entrypointInject = $inject['entrypoint_inject'];
                 }
                 $entrypointFileContent = trim(run('cd ' . $overwriteReleasePath . ' && [ -f ' . $entrypointFilename . ' ] && cat ' . $entrypointFilename . ' || echo ""'));
-                if (strpos($entrypointFileContent, $entrypointInjectStartComment) === false) {
-                    if (!empty($entrypointFileContent)) {
-                        $pos = strpos($entrypointFileContent, $entrypointNeedle);
-                        if ($pos !== false) {
-                            $content = substr_replace(
-                                $entrypointFileContent,
-                                $entrypointNeedle .
-                                $entrypointInjectStartComment . $entrypointInject . $entrypointInjectEndComment,
-                                $pos,
-                                strlen($entrypointNeedle)
-                            );
-                            $entrypointAbsolutePath = $overwriteReleasePath . $entrypointFilename;
-                            run('cp -p ' . $entrypointAbsolutePath . ' ' . $tempPath . '/');
-                            run('echo ' . escapeshellarg($content) . ' > ' . $tempPath . '/' . basename($entrypointAbsolutePath));
-                            run('mv -fT ' . $tempPath . '/' . basename($entrypointAbsolutePath) . ' ' . $entrypointAbsolutePath);
-                        } else {
-                            throw new GracefulShutdownException('Can not find needle to inject with inclusion.');
-                        }
-                    } else {
-                        throw new GracefulShutdownException('Can not find file to overwrite or the file is empty. File that was read is: ' . $overwriteReleasePath . $entrypointFilename);
+                if (empty($entrypointFileContent)) {
+                    throw new GracefulShutdownException('Can not find file to overwrite or the file is empty. File that was read is: ' . $overwriteReleasePath . $entrypointFilename);
+                }
+                $entrypointInjectBlock = $entrypointInjectStartComment . $entrypointInject . $entrypointInjectEndComment;
+                $blockStart = strpos($entrypointFileContent, $entrypointInjectStartComment);
+                if ($blockStart !== false) {
+                    $blockEnd = strpos($entrypointFileContent, $entrypointInjectEndComment, $blockStart);
+                    if ($blockEnd === false) {
+                        throw new GracefulShutdownException('Can not find end of injected code in ' . $overwriteReleasePath . $entrypointFilename);
                     }
+                    $content = substr_replace($entrypointFileContent, $entrypointInjectBlock, $blockStart, $blockEnd + strlen($entrypointInjectEndComment) - $blockStart);
+                } else {
+                    $pos = strpos($entrypointFileContent, $entrypointNeedle);
+                    if ($pos === false) {
+                        throw new GracefulShutdownException('Can not find needle to inject with inclusion.');
+                    }
+                    $content = substr_replace($entrypointFileContent, $entrypointNeedle . $entrypointInjectBlock, $pos, strlen($entrypointNeedle));
+                }
+                if ($content !== $entrypointFileContent) {
+                    $entrypointAbsolutePath = $overwriteReleasePath . $entrypointFilename;
+                    run('cp -p ' . $entrypointAbsolutePath . ' ' . $tempPath . '/');
+                    run('echo ' . escapeshellarg($content) . ' > ' . $tempPath . '/' . basename($entrypointAbsolutePath));
+                    run('mv -fT ' . $tempPath . '/' . basename($entrypointAbsolutePath) . ' ' . $entrypointAbsolutePath);
                 }
                 if (test('[ -e ' . $overwriteReleasePath . dirname($entrypointFilename) . ' ]')) {
                     run('cd ' . $overwriteReleasePath . ' && touch ' . (dirname($entrypointFilename) ? dirname($entrypointFilename) . '/' : '') . $requestBufferFlagFilename);
