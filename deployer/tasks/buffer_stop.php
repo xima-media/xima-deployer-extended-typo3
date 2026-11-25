@@ -19,7 +19,7 @@ task('buffer:stop', function () {
                 throw new GracefulShutdownException('entrypoint_filename not set for buffer_data');
             }
             $overwriteReleasePath = get('deploy_path') . '/releases/' . $releasesList[1];
-            $oldReleaseFlagFilename = empty($inject['oldrelease_flag__filename']) ?
+            $oldReleaseFlagFilename = empty($inject['oldrelease_flag_filename']) ?
                 '.flag.oldrelease' : $inject['oldrelease_flag_filename'];
             $entrypointDirectory = dirname($inject['entrypoint_filename']) === '.' ? '' : dirname($inject['entrypoint_filename']);
             if (test('[ -f ' . $overwriteReleasePath . '/' . $inject['entrypoint_filename'] . ' ]')) {
