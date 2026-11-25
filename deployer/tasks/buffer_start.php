@@ -61,22 +61,7 @@ task('buffer:start', function () {
                 } else {
                     $oldReleaseFlagFilename = $inject['oldrelease_flag_filename'];
                 }
-                if (empty($inject['oldrelease_redirect_sleep'])) {
-                    $oldReleaseRedirectSleep = 1000000; // 1s
-                } else {
-                    $oldReleaseRedirectSleep = (int)$inject['oldrelease_redirect_sleep'];
-                }
-                // Clearstatcache for n seconds after deploy
-                if (empty($inject['clearstatcache_flag_filename'])) {
-                    $clearStatCacheFlagFilename = '.flag.clearstatcache';
-                } else {
-                    $clearStatCacheFlagFilename = $inject['clearstatcache_flag_filename'];
-                }
-                if (empty($inject['clearstatcache_duration'])) {
-                    $clearStatCacheDuration = 150; // 120s is php default -> http://php.net/realpath-cache-ttl
-                } else {
-                    $clearStatCacheDuration = (int)$inject['clearstatcache_duration'];
-                }
+                $oldReleaseRedirectSleep = (int)($inject['oldrelease_redirect_sleep'] ?? 0);
 
                 $currentPath = var_export(rtrim(get('deploy_path'), '/') . '/current', true);
                 if (empty($inject['entrypoint_inject'])) {
@@ -88,18 +73,12 @@ task('buffer:start', function () {
                         "    clearstatcache(true);\n" .
                         "    if(time() - @filectime(__DIR__ . '/$requestBufferFlagFilename') > $requestBufferDuration) @unlink(__DIR__ . '/$requestBufferFlagFilename');\n" .
                         "}\n" .
-                        "// Clearstatcache for n seconds after deploy\n" .
-                        "clearstatcache(true, __DIR__ . '/$clearStatCacheFlagFilename');\n" .
-                        "if (file_exists(__DIR__ . '/$clearStatCacheFlagFilename')) {\n" .
-                        "    clearstatcache(true);\n" .
-                        "    if(time() - @filectime(__DIR__ . '/$clearStatCacheFlagFilename') > $clearStatCacheDuration) @unlink(__DIR__ . '/$clearStatCacheFlagFilename');\n" .
-                        "}\n" .
                         "// Action if php choose old release to serve request\n" .
                         "clearstatcache(true, __DIR__ . '/$oldReleaseFlagFilename');\n" .
                         "if(file_exists(__DIR__ . '/$oldReleaseFlagFilename')) {\n" .
                         "    clearstatcache(true);\n" .
                         "    if(strpos(realpath(__DIR__) . '/', realpath($currentPath) . '/') !== 0) {\n" .
-                        "        usleep($oldReleaseRedirectSleep);\n" .
+                        ($oldReleaseRedirectSleep > 0 ? "        usleep($oldReleaseRedirectSleep);\n" : '') .
                         "        header('Location: ' . (\$_SERVER['REQUEST_URI'] ?? '/'), true, 307);\n" .
                         "        exit();\n" .
                         "    }\n" .
@@ -132,7 +111,6 @@ task('buffer:start', function () {
                 }
                 if (test('[ -e ' . $overwriteReleasePath . dirname($entrypointFilename) . ' ]')) {
                     run('cd ' . $overwriteReleasePath . ' && touch ' . (dirname($entrypointFilename) ? dirname($entrypointFilename) . '/' : '') . $requestBufferFlagFilename);
-                    run('cd ' . $overwriteReleasePath . ' && touch ' . (dirname($entrypointFilename) ? dirname($entrypointFilename) . '/' : '') . $clearStatCacheFlagFilename);
                 }
             }
             run('rmdir ' . $tempPath);
