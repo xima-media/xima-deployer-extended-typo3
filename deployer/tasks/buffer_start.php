@@ -16,8 +16,20 @@ task('buffer:start', function () {
         throw new GracefulShutdownException('The "random" config var should be only /^[a-zA-Z0-9]$/ because its used in filenames.');
     }
     $currentPath = var_export(run('cd ' . get('deploy_path') . ' && pwd -P') . '/current', true);
+    // "release" and "current" get the injected code and buffer requests. In all other retained releases, code injected
+    // by earlier versions is replaced, so a worker that still resolves "current" to one of them switches as well.
+    $overwriteReleases = [];
     foreach (['release', 'current'] as $overwriteRelease) {
-        $overwriteReleasePath = get('deploy_path') . '/' . $overwriteRelease . '/';
+        $overwriteReleases[get('deploy_path') . '/' . $overwriteRelease . '/'] = true;
+    }
+    $bufferedReleaseDirs = explode("\n", run('for link in release current; do [ -e ' . get('deploy_path') . '/$link ] && readlink -f ' . get('deploy_path') . '/$link; done; true'));
+    if (test('[ -d ' . get('deploy_path') . '/releases ]')) {
+        $releaseDirs = explode("\n", run('cd ' . get('deploy_path') . '/releases && for release in */; do [ -d "$release" ] && readlink -f "$release"; done; true'));
+        foreach (array_diff(array_filter($releaseDirs), $bufferedReleaseDirs) as $releaseDir) {
+            $overwriteReleases[$releaseDir . '/'] = false;
+        }
+    }
+    foreach ($overwriteReleases as $overwriteReleasePath => $startBuffer) {
         if (test("[ -e $overwriteReleasePath ]")) {
             $tempPath = $overwriteReleasePath . get('random');
             run('[ -e ' . $tempPath . ' ] || mkdir -p ' . $tempPath);
@@ -94,6 +106,9 @@ task('buffer:start', function () {
                 }
                 $entrypointInjectBlock = $entrypointInjectStartComment . $entrypointInject . $entrypointInjectEndComment;
                 $blockStart = strpos($entrypointFileContent, $entrypointInjectStartComment);
+                if ($blockStart === false && !$startBuffer) {
+                    continue;
+                }
                 if ($blockStart !== false) {
                     $blockEnd = strpos($entrypointFileContent, $entrypointInjectEndComment, $blockStart);
                     if ($blockEnd === false) {
@@ -113,7 +128,7 @@ task('buffer:start', function () {
                     run('echo ' . escapeshellarg($content) . ' > ' . $tempPath . '/' . basename($entrypointAbsolutePath));
                     run('mv -fT ' . $tempPath . '/' . basename($entrypointAbsolutePath) . ' ' . $entrypointAbsolutePath);
                 }
-                if (test('[ -e ' . $overwriteReleasePath . dirname($entrypointFilename) . ' ]')) {
+                if ($startBuffer && test('[ -e ' . $overwriteReleasePath . dirname($entrypointFilename) . ' ]')) {
                     run('cd ' . $overwriteReleasePath . ' && touch ' . (dirname($entrypointFilename) ? dirname($entrypointFilename) . '/' : '') . $requestBufferFlagFilename);
                 }
             }

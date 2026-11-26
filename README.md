@@ -75,7 +75,7 @@ PHP rounds `opcache.max_accelerated_files` up to the next of its prime numbers (
 
 ## Request buffer and release switch
 
-`buffer:start` holds incoming requests during the deployment. It also replaces code injected by earlier versions of this package in the current release. `buffer:stop` releases the requests right after `typo3:cache:flush:pages` and marks all releases except the one `current` points to. It runs after `dep rollback` as well.
+`buffer:start` holds incoming requests during the deployment. It also replaces code injected by earlier versions of this package in all retained releases. `buffer:stop` releases the requests right after `typo3:cache:flush:pages` and marks all releases except the one `current` points to. It runs after `dep rollback` as well.
 
 A PHP-FPM worker can still resolve `current` to a previous release until its realpath cache entry expires (`realpath_cache_ttl`). Such a request runs only the entry point of that release: it clears the realpath cache of the worker and includes the entry point of the release `current` points to in the same request. The client gets no redirect, and request method and body are kept. An entry point that no longer exists in the current release (e.g. `typo3/index.php` after an upgrade to TYPO3 v14) keeps running in the previous release.
 
