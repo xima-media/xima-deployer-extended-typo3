@@ -71,6 +71,8 @@ opcache.max_accelerated_files=65407
 
 Without `opcache.revalidate_path=1`, OPcache keeps the entry points of the previous release under the `current/` path until `cache:clear_php_http` runs. Until then, every request takes the detour to the new release described below.
 
+With `opcache.validate_timestamps=0`, PHP-FPM does not notice that `buffer:start` replaces the injected code in entry points it has already cached. This matters on the first deployment after an upgrade of this package: workers keep running the previously injected code until `cache:clear_php_http` resets OPcache. Keep `validate_timestamps=1`, or set `cache:clear_php_http:fail_on_error` for that deployment.
+
 PHP rounds `opcache.max_accelerated_files` up to the next of its prime numbers (…, 16229, 32531, 65407, 130987, …), so values between 32532 and 65407 all result in 65407.
 
 ## Request buffer and release switch
