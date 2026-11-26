@@ -9,35 +9,33 @@ task('buffer:stop', function () {
     if (empty(get('deploy_path'))) {
         throw new GracefulShutdownException('The "deploy_path" var is empty but its used for file operations so its dangerous state.');
     }
-    $overwriteReleases = ['current'];
-    $releasesList = get('releases_list');
-    // Add .flag.oldrelease for cases when php cache will decide to run code in old release path
-    if (isset($releasesList[1])) {
-        $overwriteReleases[] = 'releases/' . $releasesList[1];
-        foreach (get('buffer_config') as $inject) {
-            if (empty($inject['entrypoint_filename'])) {
-                throw new GracefulShutdownException('entrypoint_filename not set for buffer_data');
-            }
-            $overwriteReleasePath = get('deploy_path') . '/releases/' . $releasesList[1];
-            $oldReleaseFlagFilename = empty($inject['oldrelease_flag__filename']) ?
-                '.flag.oldrelease' : $inject['oldrelease_flag_filename'];
-            $entrypointDirectory = dirname($inject['entrypoint_filename']) === '.' ? '' : dirname($inject['entrypoint_filename']);
-            if (test('[ -f ' . $overwriteReleasePath . '/' . $inject['entrypoint_filename'] . ' ]')) {
-                run('touch ' . $overwriteReleasePath . '/' . $entrypointDirectory . '/' . $oldReleaseFlagFilename);
-            }
+    // Add .flag.oldrelease to all releases except the one "current" points to, a worker can still resolve "current" to any of them
+    $currentRelease = basename(run('readlink -f ' . get('deploy_path') . '/current'));
+    foreach (get('buffer_config') as $inject) {
+        if (empty($inject['entrypoint_filename'])) {
+            throw new GracefulShutdownException('entrypoint_filename not set for buffer_data');
         }
+        $oldReleaseFlagFilename = empty($inject['oldrelease_flag_filename']) ?
+            '.flag.oldrelease' : $inject['oldrelease_flag_filename'];
+        $entrypointDirectory = dirname($inject['entrypoint_filename']) === '.' ? '' : dirname($inject['entrypoint_filename']) . '/';
+        run('cd ' . get('deploy_path') . '/releases && for release in */; do release=${release%/}; ' .
+            '[ -f "$release/"' . escapeshellarg($inject['entrypoint_filename']) . ' ] || continue; ' .
+            'flag="$release/"' . escapeshellarg($entrypointDirectory . $oldReleaseFlagFilename) . '; ' .
+            'if [ "$release" = ' . escapeshellarg($currentRelease) . ' ]; then rm -f "$flag"; else touch "$flag"; fi; done');
     }
-    // Remove .flag.requestbuffer also from previous release because it can be still read because php cache
-    foreach ($overwriteReleases as $overwriteRelease) {
-        $overwriteReleasePath = get('deploy_path') . '/' . $overwriteRelease;
-        foreach (get('buffer_config') as $inject) {
-            if (empty($inject['entrypoint_filename'])) {
-                throw new GracefulShutdownException('entrypoint_filename not set for buffer_data');
-            }
-            $activateBufferFlagFilename = empty($inject['requestbuffer_flag_filename']) ?
-                '.flag.requestbuffer' : $inject['requestbuffer_flag_filename'];
-            $entrypointDirectory = dirname($inject['entrypoint_filename']) === '.' ? '' : dirname($inject['entrypoint_filename']) . '/';
-            run('cd ' . $overwriteReleasePath . ' && rm -f ' . $entrypointDirectory . $activateBufferFlagFilename);
+    // Remove .flag.requestbuffer from all releases: buffer:start sets it in the release "current" pointed to, which is
+    // not always the previous one in releases_list (e.g. after a rollback)
+    foreach (get('buffer_config') as $inject) {
+        if (empty($inject['entrypoint_filename'])) {
+            throw new GracefulShutdownException('entrypoint_filename not set for buffer_data');
         }
+        $activateBufferFlagFilename = empty($inject['requestbuffer_flag_filename']) ?
+            '.flag.requestbuffer' : $inject['requestbuffer_flag_filename'];
+        $entrypointDirectory = dirname($inject['entrypoint_filename']) === '.' ? '' : dirname($inject['entrypoint_filename']) . '/';
+        run('cd ' . get('deploy_path') . '/releases && for release in */; do rm -f "$release"' .
+            escapeshellarg($entrypointDirectory . $activateBufferFlagFilename) . '; done');
     }
 })->desc('Stop buffering requests to application entry points');
+
+// After a rollback, mark all other releases so workers stop serving them.
+after('rollback', 'buffer:stop');

@@ -50,6 +50,47 @@ foreach ($branches as $branchName => $stage) {
 defineTestHost('main', 'live');
 ```
 
+## Server requirements
+
+PHP-FPM must resolve the `current` symlink itself. Settings for the PHP-FPM `php.ini` (see [Deployer: Avoid php-fpm reloading](https://deployer.org/docs/8.x/avoid-php-fpm-reloading)):
+
+```ini
+; recommended: OPcache resolves the "current" symlink and caches files under their release path
+opcache.revalidate_path=1
+
+; recommended: no open_basedir, any value disables the realpath cache and slows down every request
+open_basedir=
+
+; recommended: a short realpath cache lifetime limits how long a worker resolves "current" to a previous release
+realpath_cache_ttl=30
+realpath_cache_size=16M
+
+; recommended: room for the files of two releases until cache:clear_php_http removes the previous one
+opcache.max_accelerated_files=65407
+```
+
+Without `opcache.revalidate_path=1`, OPcache keeps the entry points of the previous release under the `current/` path until `cache:clear_php_http` runs. Until then, every request takes the detour to the new release described below.
+
+With `opcache.validate_timestamps=0`, PHP-FPM does not notice that `buffer:start` replaces the injected code in entry points it has already cached. This matters on the first deployment after an upgrade of this package: workers keep running the previously injected code until `cache:clear_php_http` resets OPcache. Keep `validate_timestamps=1`, or set `cache:clear_php_http:fail_on_error` for that deployment.
+
+`dep check:requirements <host>` reads these settings from PHP-FPM through the web server and warns about deviations.
+
+PHP rounds `opcache.max_accelerated_files` up to the next of its prime numbers (…, 16229, 32531, 65407, 130987, …), so values between 32532 and 65407 all result in 65407.
+
+## Request buffer and release switch
+
+`buffer:start` holds incoming requests during the deployment. It also replaces code injected by earlier versions of this package in all retained releases. `buffer:stop` releases the requests right after `typo3:cache:flush:pages` and marks all releases except the one `current` points to. It runs after `dep rollback` as well.
+
+A PHP-FPM worker can still resolve `current` to a previous release until its realpath cache entry expires (`realpath_cache_ttl`). Such a request runs only the entry point of that release: it clears the realpath cache of the worker and includes the entry point of the release `current` points to in the same request. The client gets no redirect, and request method and body are kept. An entry point that no longer exists in the current release (e.g. `typo3/index.php` after an upgrade to TYPO3 v14) keeps running in the previous release.
+
+`cache:clear_php_http` runs after `buffer:stop` and calls `opcache_reset()`. This empties the whole OPcache of the PHP-FPM instance, including the new release and other sites served by it. Any failure of the task (missing `public_urls`, unwritable web directory, failed request) only prints a warning.
+
+| Setting | Default | Description |
+|---|---|---|
+| `cache:clear_php_http:timeout` | `60` | Request timeout in seconds |
+| `cache:clear_php_http:fail_on_error` | `false` | Fail the deployment if the request fails |
+| `oldrelease_switch_sleep` in `buffer_config` (was `oldrelease_redirect_sleep`) | `0` | Microseconds to wait before a previous release includes the current entry point |
+
 ## Hosts for feature branches
 
 `BranchUtility::environmentBranches()` returns only the branches that need a host, instead of defining a host for every possible ticket number. It takes the host name prefix and a list of branch name patterns (regex without delimiters, case-insensitive) with the stage of their hosts:
