@@ -2,8 +2,6 @@
 
 namespace Deployer;
 
-use SourceBroker\DeployerExtendedDatabase\Utility\ConsoleUtility;
-use SourceBroker\DeployerExtendedTypo3\Utility\ConsoleUtility as ConsoleUtilityAlias;
 use Symfony\Component\Console\Helper\Table;
 use Xima\XimaDeployerExtendedTypo3\Utility\EnvUtility;
 
