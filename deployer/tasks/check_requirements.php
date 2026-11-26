@@ -407,6 +407,11 @@ task('check:php_settings', function () {
     'post_max_size' => ini_get('post_max_size'),               // must be 21M+
     'upload_max_filesize' => ini_get('upload_max_filesize'),   // must be 20M+
     'opcache.enable' => ini_get('opcache.enable'),             // must be 1
+    'opcache.revalidate_path' => ini_get('opcache.revalidate_path'),                 // should be 1
+    'opcache.validate_timestamps' => ini_get('opcache.validate_timestamps'),         // should be 1
+    'opcache.max_accelerated_files' => ini_get('opcache.max_accelerated_files'),     // should be 32532+
+    'realpath_cache_ttl' => ini_get('realpath_cache_ttl'),                           // should be 30 or less
+    'open_basedir' => ini_get('open_basedir'),                                       // should be empty
 ];
 header(\"Content-Type: application/json\");
 echo json_encode(\$data);
@@ -498,6 +503,34 @@ EOD;
         $results[] = ['check:php_settings', 'Error', 'Opcache is disabled'];
     } else {
         $results[] = ['check:php_settings', 'Ok', 'Opcache is enabled'];
+    }
+
+    // Recommended for the release switch, see README "Server requirements"
+    if (($config['opcache.revalidate_path'] ?? '') !== '1') {
+        $results[] = ['check:php_settings', 'Warning', 'opcache.revalidate_path is off, should be 1'];
+    } else {
+        $results[] = ['check:php_settings', 'Ok', 'opcache.revalidate_path = 1'];
+    }
+    if (($config['opcache.validate_timestamps'] ?? '') !== '1') {
+        $results[] = ['check:php_settings', 'Warning', 'opcache.validate_timestamps is off, should be 1'];
+    } else {
+        $results[] = ['check:php_settings', 'Ok', 'opcache.validate_timestamps = 1'];
+    }
+    // PHP rounds up to the next prime of its list, 32532 and more result in 65407
+    if (intval($config['opcache.max_accelerated_files'] ?? 0) < 32532) {
+        $results[] = ['check:php_settings', 'Warning', 'opcache.max_accelerated_files ' . ($config['opcache.max_accelerated_files'] ?? '') . ' is too small for two releases, should be 65407'];
+    } else {
+        $results[] = ['check:php_settings', 'Ok', 'opcache.max_accelerated_files = ' . $config['opcache.max_accelerated_files']];
+    }
+    if (intval($config['realpath_cache_ttl'] ?? 120) > 30) {
+        $results[] = ['check:php_settings', 'Warning', 'realpath_cache_ttl ' . ($config['realpath_cache_ttl'] ?? '') . ' is higher than 30s'];
+    } else {
+        $results[] = ['check:php_settings', 'Ok', 'realpath_cache_ttl = ' . $config['realpath_cache_ttl']];
+    }
+    if (($config['open_basedir'] ?? '') !== '') {
+        $results[] = ['check:php_settings', 'Warning', 'open_basedir is set, should be empty'];
+    } else {
+        $results[] = ['check:php_settings', 'Ok', 'open_basedir is empty'];
     }
 
     set('requirement_rows', [
