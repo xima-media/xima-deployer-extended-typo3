@@ -74,7 +74,10 @@ task('buffer:start', function () {
                 } else {
                     $oldReleaseFlagFilename = $inject['oldrelease_flag_filename'];
                 }
-                $oldReleaseRedirectSleep = (int)($inject['oldrelease_redirect_sleep'] ?? 0);
+                if (isset($inject['oldrelease_redirect_sleep'])) {
+                    throw new GracefulShutdownException('buffer_config option "oldrelease_redirect_sleep" was renamed to "oldrelease_switch_sleep".');
+                }
+                $oldReleaseSwitchSleep = (int)($inject['oldrelease_switch_sleep'] ?? 0);
 
                 if (empty($inject['entrypoint_inject'])) {
                     $entrypointInject =
@@ -92,7 +95,7 @@ task('buffer:start', function () {
                         "    \$deployerExtendedCurrentEntrypoint = realpath($currentPath) . " . var_export('/' . $entrypointFilename, true) . ";\n" .
                         "    // Entry points removed in the current release (e.g. typo3/index.php in TYPO3 v14) keep running here\n" .
                         "    if(strpos(realpath(__DIR__) . '/', realpath($currentPath) . '/') !== 0 && is_file(\$deployerExtendedCurrentEntrypoint)) {\n" .
-                        ($oldReleaseRedirectSleep > 0 ? "        usleep($oldReleaseRedirectSleep);\n" : '') .
+                        ($oldReleaseSwitchSleep > 0 ? "        usleep($oldReleaseSwitchSleep);\n" : '') .
                         "        include \$deployerExtendedCurrentEntrypoint;\n" .
                         "        exit();\n" .
                         "    }\n" .

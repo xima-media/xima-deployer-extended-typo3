@@ -87,7 +87,7 @@ A PHP-FPM worker can still resolve `current` to a previous release until its rea
 |---|---|---|
 | `cache:clear_php_http:timeout` | `60` | Request timeout in seconds |
 | `cache:clear_php_http:fail_on_error` | `false` | Fail the deployment if the request fails |
-| `oldrelease_redirect_sleep` in `buffer_config` | `0` | Microseconds to wait before a previous release includes the current entry point |
+| `oldrelease_switch_sleep` in `buffer_config` (was `oldrelease_redirect_sleep`) | `0` | Microseconds to wait before a previous release includes the current entry point |
 
 ## Hosts for feature branches
 
