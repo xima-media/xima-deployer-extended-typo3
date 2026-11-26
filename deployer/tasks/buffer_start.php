@@ -77,9 +77,11 @@ task('buffer:start', function () {
                         "clearstatcache(true, __DIR__ . '/$oldReleaseFlagFilename');\n" .
                         "if(file_exists(__DIR__ . '/$oldReleaseFlagFilename')) {\n" .
                         "    clearstatcache(true);\n" .
-                        "    if(strpos(realpath(__DIR__) . '/', realpath($currentPath) . '/') !== 0) {\n" .
+                        "    \$deployerExtendedCurrentEntrypoint = realpath($currentPath) . " . var_export('/' . $entrypointFilename, true) . ";\n" .
+                        "    // Entry points removed in the current release (e.g. typo3/index.php in TYPO3 v14) keep running here\n" .
+                        "    if(strpos(realpath(__DIR__) . '/', realpath($currentPath) . '/') !== 0 && is_file(\$deployerExtendedCurrentEntrypoint)) {\n" .
                         ($oldReleaseRedirectSleep > 0 ? "        usleep($oldReleaseRedirectSleep);\n" : '') .
-                        "        include realpath($currentPath) . " . var_export('/' . $entrypointFilename, true) . ";\n" .
+                        "        include \$deployerExtendedCurrentEntrypoint;\n" .
                         "        exit();\n" .
                         "    }\n" .
                         "}";
