@@ -12,8 +12,8 @@ task('buffer:start', function () {
     if (empty(get('random'))) {
         throw new GracefulShutdownException('The "random" config var is empty. Its needed for file operation.');
     }
-    if (preg_match('/^[a-zA-Z0-9]$/', get('random'))) {
-        throw new GracefulShutdownException('The "random" config var should be only /^[a-zA-Z0-9]$/ because its used in filenames.');
+    if (!preg_match('/^[a-zA-Z0-9]+$/', get('random'))) {
+        throw new GracefulShutdownException('The "random" config var should be only /^[a-zA-Z0-9]+$/ because its used in filenames.');
     }
     $currentPath = var_export(run('cd ' . get('deploy_path') . ' && pwd -P') . '/current', true);
     // "release" and "current" get the injected code and buffer requests. In all other retained releases, code injected
