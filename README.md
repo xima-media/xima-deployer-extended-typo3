@@ -79,7 +79,7 @@ PHP rounds `opcache.max_accelerated_files` up to the next of its prime numbers (
 
 A PHP-FPM worker can still resolve `current` to a previous release until its realpath cache entry expires (`realpath_cache_ttl`). Such a request runs only the entry point of that release: it clears the realpath cache of the worker and includes the entry point of the release `current` points to in the same request. The client gets no redirect, and request method and body are kept. An entry point that no longer exists in the current release (e.g. `typo3/index.php` after an upgrade to TYPO3 v14) keeps running in the previous release.
 
-`cache:clear_php_http` runs after `buffer:stop` and calls `opcache_reset()`. This empties the whole OPcache of the PHP-FPM instance, including the new release and other sites served by it. A failed request only prints a warning.
+`cache:clear_php_http` runs after `buffer:stop` and calls `opcache_reset()`. This empties the whole OPcache of the PHP-FPM instance, including the new release and other sites served by it. Any failure of the task (missing `public_urls`, unwritable web directory, failed request) only prints a warning.
 
 | Setting | Default | Description |
 |---|---|---|
